@@ -1,19 +1,22 @@
 // src/app/auth/login/page.tsx
-// Public page — allows existing salon owners to log in
-// On success, redirects to /dashboard
+// Uses server action to handle login so cookies are set correctly
 
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Use browser client — sets cookies automatically
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  );
 
   const handleLogin = async () => {
     setLoading(true);
@@ -30,14 +33,13 @@ export default function LoginPage() {
       return;
     }
 
-    // Redirect to dashboard after successful login
-    router.push("/dashboard");
+    // Force full reload so middleware picks up the new session cookie
+    window.location.href = "/dashboard";
   };
 
   return (
     <div style={{ maxWidth: "400px", margin: "100px auto", padding: "20px" }}>
       <h1>Login to BeautyGlow</h1>
-
       <input
         type="email"
         placeholder="Email"
@@ -50,7 +52,6 @@ export default function LoginPage() {
           padding: "8px",
         }}
       />
-
       <input
         type="password"
         placeholder="Password"
@@ -63,9 +64,7 @@ export default function LoginPage() {
           padding: "8px",
         }}
       />
-
       {error && <p style={{ color: "red" }}>{error}</p>}
-
       <button
         onClick={handleLogin}
         disabled={loading}
@@ -73,7 +72,6 @@ export default function LoginPage() {
       >
         {loading ? "Logging in..." : "Login"}
       </button>
-
       <p style={{ marginTop: "20px" }}>
         Don&apos;t have an account? <a href="/auth/signup">Sign Up</a>
       </p>

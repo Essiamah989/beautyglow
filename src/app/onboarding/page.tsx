@@ -1,13 +1,15 @@
 // src/app/onboarding/page.tsx
 // Multi-step onboarding wizard for new salon owners
-// Step 1: Business info | Step 2: Subdomain | Step 3: Services | Step 4: Logo
+// Step 1: Business info | Step 2: Subdomain | Step 3: Services | Step 4: Logo | Step 5: Save
 
 "use client";
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function OnboardingPage() {
+  const router = useRouter();
   const [step, setStep] = useState(1);
 
   // Step 1 fields
@@ -33,20 +35,101 @@ export default function OnboardingPage() {
   const [logoPreview, setLogoPreview] = useState("");
 
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   // Check subdomain availability
   const checkSubdomain = async (value: string) => {
     if (value.length < 3) return;
     setCheckingSubdomain(true);
-
     const { data } = await supabase
       .from("businesses")
       .select("id")
       .eq("subdomain", value)
       .single();
-
     setSubdomainAvailable(!data);
     setCheckingSubdomain(false);
+  };
+
+  // Final save — called on Step 5
+  const handleFinish = async () => {
+    setSaving(true);
+    setError("");
+
+    try {
+      // 1. Get current logged in user
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        setError("You must be logged in");
+        setSaving(false);
+        return;
+      }
+
+      // 2. Upload logo if provided
+      let logoUrl = "";
+      if (logoFile) {
+        const fileExt = logoFile.name.split(".").pop();
+        const filePath = `logos/${user.id}/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("business-asset")
+          .upload(filePath, logoFile);
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from("business-asset")
+          .getPublicUrl(filePath);
+
+        logoUrl = urlData.publicUrl;
+      }
+
+      // 3. Save business to database
+      const { data: business, error: businessError } = await supabase
+        .from("businesses")
+        .insert({
+          owner_id: user.id,
+          business_name: businessName,
+          subdomain: subdomain,
+          phone: phone,
+          address: address,
+          description: description,
+          logo_url: logoUrl || null,
+          plan_type: "trial",
+        })
+        .select()
+        .single();
+
+      if (businessError) throw businessError;
+
+      // 4. Save services to database
+      const validServices = services.filter(
+        (s) => s.name && s.price && s.duration,
+      );
+      const servicesData = validServices.map((s, index) => ({
+        business_id: business.id,
+        name: s.name,
+        price: parseFloat(s.price),
+        duration_minutes: parseInt(s.duration),
+        display_order: index,
+        is_active: true,
+      }));
+
+      const { error: servicesError } = await supabase
+        .from("services")
+        .insert(servicesData);
+
+      if (servicesError) throw servicesError;
+
+      // 5. All done — redirect to dashboard
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error("Onboarding save failed:", err);
+      setError(err.message || "Something went wrong. Please try again.");
+      setSaving(false);
+    }
   };
 
   return (
@@ -359,17 +442,65 @@ export default function OnboardingPage() {
         </div>
       )}
 
-      {/* STEP 5: Confirm — Coming Day 7 */}
+      {/* STEP 5: Confirm + Save */}
       {step === 5 && (
         <div>
-          <h2>Almost done!</h2>
-          <p>Save to database coming in Day 7...</p>
-          <button
-            onClick={() => setStep(4)}
-            style={{ padding: "10px 20px", cursor: "pointer" }}
+          <h2>Everything looks good!</h2>
+          <p>Here's a summary of your salon:</p>
+
+          <div
+            style={{
+              background: "#f9f9f9",
+              padding: "15px",
+              borderRadius: "8px",
+              marginBottom: "20px",
+            }}
           >
-            ← Back
-          </button>
+            <p>
+              <strong>Salon name:</strong> {businessName}
+            </p>
+            <p>
+              <strong>Website:</strong> {subdomain}.beautyglow.tn
+            </p>
+            <p>
+              <strong>Phone:</strong> {phone}
+            </p>
+            <p>
+              <strong>Address:</strong> {address}
+            </p>
+            <p>
+              <strong>Services:</strong> {services.filter((s) => s.name).length}{" "}
+              added
+            </p>
+            <p>
+              <strong>Logo:</strong> {logoFile ? logoFile.name : "Skipped"}
+            </p>
+          </div>
+
+          {error && <p style={{ color: "red" }}>{error}</p>}
+
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              onClick={() => setStep(4)}
+              style={{ padding: "10px 20px", cursor: "pointer" }}
+            >
+              ← Back
+            </button>
+            <button
+              onClick={handleFinish}
+              disabled={saving}
+              style={{
+                padding: "10px 20px",
+                cursor: "pointer",
+                background: "#EC4899",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+              }}
+            >
+              {saving ? "Saving..." : "🚀 Launch my salon!"}
+            </button>
+          </div>
         </div>
       )}
     </div>

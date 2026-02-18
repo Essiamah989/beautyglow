@@ -1,16 +1,12 @@
 // src/middleware.ts
-// Runs on every request BEFORE the page loads
-// Protects /dashboard routes — redirects to /auth/login if not authenticated
-// Also handles subdomain routing (will be expanded in Day 8)
+// Protects /dashboard routes and refreshes auth session on every request
 
 import { createServerClient } from '@supabase/ssr'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  const supabaseResponse = NextResponse.next({ request })
+  const  supabaseResponse = NextResponse.next({ request })
 
-  // Create supabase client inside middleware
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -26,10 +22,11 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Get current user session
+  // Refresh session on every request
   const { data: { user } } = await supabase.auth.getUser()
+  console.log('Middleware user:', user?.email)
 
-  // If user is not logged in and tries to access /dashboard → redirect to login
+  // Protect /dashboard only
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard')
   if (isProtectedRoute && !user) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
@@ -38,7 +35,7 @@ export async function middleware(request: NextRequest) {
   return supabaseResponse
 }
 
-// Which routes this middleware runs on
 export const config = {
+  // Only run middleware on dashboard routes — not on auth pages!
   matcher: ['/dashboard/:path*']
 }
