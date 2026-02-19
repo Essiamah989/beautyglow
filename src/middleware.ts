@@ -14,10 +14,6 @@ export async function middleware(request: NextRequest) {
   const mainDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'
   const subdomain = hostname.replace(`.${mainDomain}`, '')
 
-    // Temporary debug
-  console.log('Hostname:', hostname)
-  console.log('MainDomain:', mainDomain)
-  console.log('Extracted subdomain:', subdomain)
 
   // If there's a subdomain and it's not www — serve the salon's public website
   const isSubdomain = subdomain && subdomain !== mainDomain && subdomain !== 'www'

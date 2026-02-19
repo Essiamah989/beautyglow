@@ -27,18 +27,7 @@ export default async function SalonPage({
     .eq('subdomain', subdomain)
     .limit(1)
 
-    // Temporary debug
-    console.log('Subdomain queried:',JSON.stringify(subdomain))
-    console.log('Results:', JSON.stringify(businesses))
-    console.log('Query error:', JSON.stringify(URIError))
-    console.log('Full params:', JSON.stringify(await params))
-  
     const business = businesses?.[0] || null
-
-     // Temporary debug
-    console.log('Business found:', business)
-    console.log('Error:', error)
-    console.log('Service key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY)
   
   // Look up their services
   const { data: services } = await supabase
