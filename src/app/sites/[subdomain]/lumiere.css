@@ -149,6 +149,20 @@ body {
   letter-spacing: 0.3px;
 }
 
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.95) 0%,
+    rgba(0, 0, 0, 0.85) 45%,
+    rgba(0, 0, 0, 0.2) 70%,
+    transparent 100%
+  );
+  z-index: 1;
+}
+
 .hero-info-item a {
   color: #c9a96e;
   text-decoration: none;
