@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from '@supabase/ssr'
 import Image from "next/image";
 
 interface Photo {
@@ -33,10 +33,12 @@ interface Props {
   beforeAfters: BeforeAfter[]  // ← make sure this exists
 }
 
-const supabase = createClient(
+
+
+const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 const categories = ["salon", "work_examples", "team"];
 const categoryLabels: Record<string, string> = {

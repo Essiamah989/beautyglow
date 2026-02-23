@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from '@supabase/ssr'
 
 interface Testimonial {
   id: string;
@@ -23,10 +23,12 @@ interface Props {
   businessId: string;
 }
 
-const supabase = createClient(
+
+
+const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 const emptyForm = { customer_name: "", rating: 5, comment: "", service_id: "" };
 

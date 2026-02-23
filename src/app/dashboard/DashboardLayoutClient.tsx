@@ -42,7 +42,7 @@ export default function DashboardLayoutClient({ business, children }: Props) {
     await supabase.auth.signOut();
     window.location.href = "/auth/login";
   };
-
+  
   return (
     <>
       <style>{`

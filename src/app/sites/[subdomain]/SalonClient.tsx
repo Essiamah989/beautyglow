@@ -6,6 +6,7 @@
 import "./lumiere.css";
 import { useState } from "react";
 import Image from "next/image";
+import { sendBookingEmail } from '@/app/actions/sendBookingEmail'
 
 interface Service {
   id: string;
@@ -129,6 +130,19 @@ export default function SalonClient({
         booking_time: bookingTime,
         status: "pending",
       });
+
+      // After successful booking insert, call notification API
+
+      // Then in handleBooking replace the entire fetch block with:
+      sendBookingEmail({
+        business_id: business.id,
+        service_id: selectedService?.id || "",
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_email: customerEmail || null,
+        booking_date: bookingDate,
+        booking_time: bookingTime,
+      }).catch((err) => console.error("Email failed:", err));
 
       if (error) throw error;
 

@@ -1,94 +1,92 @@
 // src/app/dashboard/bookings/BookingsClient.tsx
 // Client component — filter, confirm, cancel bookings
 
-"use client";
+'use client'
 
-import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useState } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface Booking {
-  id: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_email: string;
-  booking_date: string;
-  booking_time: string;
-  status: string;
-  notes: string;
-  services: { name: string; price: number } | null;
+  id: string
+  customer_name: string
+  customer_phone: string
+  customer_email: string
+  booking_date: string
+  booking_time: string
+  status: string
+  notes: string
+  services: { name: string; price: number } | null
 }
 
 interface Props {
-  bookings: Booking[];
-  businessId: string;
+  bookings: Booking[]
+  businessId: string
 }
 
-const supabase = createClient(
+
+
+const supabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 const statusColors: Record<string, string> = {
-  pending: "#c9a96e",
-  confirmed: "#4ade80",
-  cancelled: "#ef4444",
-  completed: "#888",
-  no_show: "#ef4444",
-};
+  pending:   '#c9a96e',
+  confirmed: '#4ade80',
+  cancelled: '#ef4444',
+  completed: '#888',
+  no_show:   '#ef4444',
+}
 
 const statusLabels: Record<string, string> = {
-  pending: "En attente",
-  confirmed: "Confirmé",
-  cancelled: "Annulé",
-  completed: "Terminé",
-  no_show: "Absent",
-};
+  pending:   'En attente',
+  confirmed: 'Confirmé',
+  cancelled: 'Annulé',
+  completed: 'Terminé',
+  no_show:   'Absent',
+}
 
-export default function BookingsClient({
-  bookings: initial,
-  businessId,
-}: Props) {
-  const [bookings, setBookings] = useState<Booking[]>(initial);
-  const [filter, setFilter] = useState<string>("all");
-  const [loading, setLoading] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+export default function BookingsClient({ bookings: initial, businessId }: Props) {
+  const [bookings, setBookings] = useState<Booking[]>(initial)
+  const [filter, setFilter] = useState<string>('all')
+  const [loading, setLoading] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
 
   const updateStatus = async (id: string, status: string) => {
-    setLoading(id);
+    setLoading(id)
     try {
       const { error } = await supabase
-        .from("bookings")
+        .from('bookings')
         .update({ status })
-        .eq("id", id);
+        .eq('id', id)
 
-      if (error) throw error;
+      if (error) throw error
 
-      setBookings((prev) =>
-        prev.map((b) => (b.id === id ? { ...b, status } : b)),
-      );
+      setBookings(prev =>
+        prev.map(b => b.id === id ? { ...b, status } : b)
+      )
     } catch (error) {
-      console.error("Update failed:", error);
+      console.error('Update failed:', error)
     } finally {
-      setLoading(null);
+      setLoading(null)
     }
-  };
+  }
 
-  const filtered = bookings.filter((b) => {
-    const matchesFilter = filter === "all" || b.status === filter;
-    const matchesSearch =
-      search === "" ||
+  const filtered = bookings.filter(b => {
+    const matchesFilter = filter === 'all' || b.status === filter
+    const matchesSearch = search === '' ||
       b.customer_name.toLowerCase().includes(search.toLowerCase()) ||
-      b.customer_phone.includes(search);
-    return matchesFilter && matchesSearch;
-  });
+      b.customer_phone.includes(search)
+    return matchesFilter && matchesSearch
+  })
 
   const counts = {
-    all: bookings.length,
-    pending: bookings.filter((b) => b.status === "pending").length,
-    confirmed: bookings.filter((b) => b.status === "confirmed").length,
-    completed: bookings.filter((b) => b.status === "completed").length,
-    cancelled: bookings.filter((b) => b.status === "cancelled").length,
-  };
+    all:       bookings.length,
+    pending:   bookings.filter(b => b.status === 'pending').length,
+    confirmed: bookings.filter(b => b.status === 'confirmed').length,
+    completed: bookings.filter(b => b.status === 'completed').length,
+    cancelled: bookings.filter(b => b.status === 'cancelled').length,
+  }
 
   return (
     <>
@@ -283,10 +281,10 @@ export default function BookingsClient({
         {Object.entries(counts).map(([key, count]) => (
           <button
             key={key}
-            className={`filter-btn ${filter === key ? "active" : ""}`}
+            className={`filter-btn ${filter === key ? 'active' : ''}`}
             onClick={() => setFilter(key)}
           >
-            {key === "all" ? "Tous" : statusLabels[key]}
+            {key === 'all' ? 'Tous' : statusLabels[key]}
             <span className="filter-count">{count}</span>
           </button>
         ))}
@@ -304,7 +302,7 @@ export default function BookingsClient({
 
       {/* Results count */}
       <div className="results-count">
-        {filtered.length} réservation{filtered.length !== 1 ? "s" : ""}
+        {filtered.length} réservation{filtered.length !== 1 ? 's' : ''}
       </div>
 
       {/* Bookings List */}
@@ -312,6 +310,7 @@ export default function BookingsClient({
         <div className="bookings-list">
           {filtered.map((booking) => (
             <div key={booking.id} className="booking-row">
+
               {/* Customer */}
               <div>
                 <div className="booking-customer">{booking.customer_name}</div>
@@ -321,22 +320,20 @@ export default function BookingsClient({
               {/* Service */}
               <div>
                 <div className="booking-service">
-                  {booking.services?.name || "Service non spécifié"}
+                  {booking.services?.name || 'Service non spécifié'}
                 </div>
                 {booking.services?.price && (
-                  <div className="booking-price">
-                    {booking.services.price} TND
-                  </div>
+                  <div className="booking-price">{booking.services.price} TND</div>
                 )}
               </div>
 
               {/* Date */}
               <div>
                 <div className="booking-datetime">
-                  {new Date(booking.booking_date).toLocaleDateString("fr-TN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
+                  {new Date(booking.booking_date).toLocaleDateString('fr-TN', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric'
                   })}
                 </div>
                 <div className="booking-time">⏱ {booking.booking_time}</div>
@@ -357,37 +354,37 @@ export default function BookingsClient({
 
               {/* Actions */}
               <div className="booking-actions">
-                {booking.status === "pending" && (
+                {booking.status === 'pending' && (
                   <>
                     <button
                       className="action-btn confirm"
                       disabled={loading === booking.id}
-                      onClick={() => updateStatus(booking.id, "confirmed")}
+                      onClick={() => updateStatus(booking.id, 'confirmed')}
                     >
-                      {loading === booking.id ? "..." : "Confirmer"}
+                      {loading === booking.id ? '...' : 'Confirmer'}
                     </button>
                     <button
                       className="action-btn cancel"
                       disabled={loading === booking.id}
-                      onClick={() => updateStatus(booking.id, "cancelled")}
+                      onClick={() => updateStatus(booking.id, 'cancelled')}
                     >
                       Annuler
                     </button>
                   </>
                 )}
-                {booking.status === "confirmed" && (
+                {booking.status === 'confirmed' && (
                   <>
                     <button
                       className="action-btn"
                       disabled={loading === booking.id}
-                      onClick={() => updateStatus(booking.id, "completed")}
+                      onClick={() => updateStatus(booking.id, 'completed')}
                     >
-                      {loading === booking.id ? "..." : "Terminé"}
+                      {loading === booking.id ? '...' : 'Terminé'}
                     </button>
                     <button
                       className="action-btn cancel"
                       disabled={loading === booking.id}
-                      onClick={() => updateStatus(booking.id, "no_show")}
+                      onClick={() => updateStatus(booking.id, 'no_show')}
                     >
                       Absent
                     </button>
@@ -399,14 +396,12 @@ export default function BookingsClient({
         </div>
       ) : (
         <div className="empty-state">
-          <p style={{ fontSize: "2rem", marginBottom: "12px", opacity: 0.2 }}>
-            ◎
-          </p>
-          <p style={{ fontSize: "0.85rem", color: "#333", fontWeight: 300 }}>
+          <p style={{ fontSize: '2rem', marginBottom: '12px', opacity: 0.2 }}>◎</p>
+          <p style={{ fontSize: '0.85rem', color: '#333', fontWeight: 300 }}>
             Aucune réservation trouvée
           </p>
         </div>
       )}
     </>
-  );
+  )
 }
