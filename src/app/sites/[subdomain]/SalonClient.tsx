@@ -6,7 +6,7 @@
 import "./lumiere.css";
 import { useState } from "react";
 import Image from "next/image";
-import { sendBookingEmail } from '@/app/actions/sendBookingEmail'
+import { sendBookingEmail } from "@/app/actions/sendBookingEmail";
 
 interface Service {
   id: string;
@@ -43,14 +43,24 @@ interface BeforeAfter {
 interface Business {
   id: string;
   business_name: string;
-  address: string;
+  subdomain: string;
   phone: string;
+  address: string;
   description: string;
   logo_url: string;
+  opening_hours: {
+    monday: { open: string; close: string; closed: boolean };
+    tuesday: { open: string; close: string; closed: boolean };
+    wednesday: { open: string; close: string; closed: boolean };
+    thursday: { open: string; close: string; closed: boolean };
+    friday: { open: string; close: string; closed: boolean };
+    saturday: { open: string; close: string; closed: boolean };
+    sunday: { open: string; close: string; closed: boolean };
+  };
   social_links: {
-    instagram?: string;
-    facebook?: string;
-    whatsapp?: string;
+    instagram: string;
+    facebook: string;
+    whatsapp: string;
   };
 }
 
