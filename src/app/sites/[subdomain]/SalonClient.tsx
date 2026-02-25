@@ -330,7 +330,7 @@ export default function SalonClient({
               { key: "saturday", label: "Samedi" },
               { key: "sunday", label: "Dimanche" },
             ].map(({ key, label }) => {
-              const hours = business.opening_hours[key];
+              const hours = business.opening_hours[key as keyof typeof business.opening_hours]
               if (!hours) return null;
               const todayKey = new Date()
                 .toLocaleDateString("en-US", { weekday: "long" })
