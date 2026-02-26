@@ -1,1154 +1,1523 @@
-// src/app/page.tsx
-// BeautyGlow Landing Page — marketing site for salon owners
+'use client'
 
-import Link from "next/link";
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function LandingPage() {
+  const router = useRouter()
+  const [scrolled, setScrolled] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    const onScroll = () => setScrolled(window.scrollY > 40)
+    window.addEventListener('scroll', onScroll)
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
   return (
     <>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap');
-
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-:root {
-  --gold: #b8934a;
-  --gold-light: #d4a96a;
-  --pink: #f2a8c4;
-  --pink-light: #fce4ef;
-  --pink-dark: #e07aa0;
-  --sky: #7bb8d4;
-  --sky-light: #e8f4fa;
-  --sky-dark: #4a90b8;
-  --white: #ffffff;
-  --cream: #fdf8f5;
-  --cream-2: #f9f0eb;
-  --text: #2a1a12;
-  --text-muted: #8a6a5a;
-  --text-dim: #c4a898;
-  --border: #edd8cc;
-}
-
-body {
-  background: var(--cream);
-  color: var(--text);
-  font-family: 'Inter', sans-serif;
-  font-weight: 300;
-  overflow-x: hidden;
-}
-
-/* NAV */
-.nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  padding: 24px 48px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: rgba(253,248,245,0.92);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-}
-
-.nav-logo {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.4rem;
-  font-weight: 400;
-  color: var(--gold);
-  text-decoration: none;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 40px;
-}
-
-.nav-link {
-  font-size: 0.72rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.nav-link:hover { color: var(--gold); }
-
-.nav-cta {
-  font-size: 0.68rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--white);
-  background: var(--pink-dark);
-  padding: 11px 28px;
-  text-decoration: none;
-  transition: background 0.2s;
-  font-weight: 600;
-  border-radius: 2px;
-}
-
-.nav-cta:hover { background: var(--pink); }
-
-/* HERO */
-.hero {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  position: relative;
-  padding: 120px 48px 80px;
-  overflow: hidden;
-  background: linear-gradient(135deg, #fff5f9 0%, #fdf8f5 40%, #f0f7fc 100%);
-}
-
-.hero-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 80% 20%, rgba(242,168,196,0.2) 0%, transparent 50%),
-    radial-gradient(ellipse at 10% 80%, rgba(123,184,212,0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 100%, rgba(184,147,74,0.08) 0%, transparent 40%);
-}
-
-.hero-dots {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(184,147,74,0.12) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
-
-.hero-tag {
-  font-size: 0.62rem;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--sky-dark);
-  margin-bottom: 32px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-weight: 500;
-}
-
-.hero-tag::before {
-  content: '';
-  width: 40px;
-  height: 1px;
-  background: var(--sky-dark);
-  opacity: 0.6;
-}
-
-.hero-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(3.5rem, 7vw, 7rem);
-  font-weight: 300;
-  line-height: 1.05;
-  color: var(--text);
-  margin-bottom: 32px;
-  max-width: 800px;
-}
-
-.hero-title em {
-  font-style: italic;
-  color: var(--pink-dark);
-}
-
-.hero-sub {
-  font-size: 1rem;
-  color: var(--text-muted);
-  font-weight: 300;
-  max-width: 480px;
-  line-height: 1.7;
-  margin-bottom: 48px;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.btn-primary {
-  background: var(--pink-dark);
-  color: var(--white);
-  font-family: 'Inter', sans-serif;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  padding: 16px 40px;
-  text-decoration: none;
-  transition: background 0.2s;
-  display: inline-block;
-  border-radius: 2px;
-}
-
-.btn-primary:hover { background: var(--pink); color: var(--text); }
-
-.btn-secondary {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  text-decoration: none;
-  padding: 16px 24px;
-  border: 1px solid var(--border);
-  transition: all 0.2s;
-  display: inline-block;
-  border-radius: 2px;
-}
-
-.btn-secondary:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-}
-
-.hero-stats {
-  position: absolute;
-  right: 48px;
-  bottom: 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  text-align: right;
-}
-
-.hero-stat-number {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 2.4rem;
-  font-weight: 300;
-  color: var(--gold);
-  line-height: 1;
-  display: block;
-}
-
-.hero-stat-label {
-  font-size: 0.62rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  display: block;
-  margin-top: 4px;
-}
-
-/* PROBLEM SECTION */
-.problem-section {
-  padding: 120px 48px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.section-tag {
-  font-size: 0.62rem;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--sky-dark);
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-weight: 500;
-}
-
-.section-tag::before {
-  content: '';
-  width: 32px;
-  height: 1px;
-  background: var(--sky-dark);
-  opacity: 0.6;
-}
-
-.section-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(2.2rem, 4vw, 3.5rem);
-  font-weight: 300;
-  line-height: 1.2;
-  color: var(--text);
-  margin-bottom: 64px;
-  max-width: 600px;
-}
-
-.problem-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-}
-
-.problem-card {
-  background: var(--white);
-  padding: 40px 32px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  transition: box-shadow 0.2s, transform 0.2s;
-}
-
-.problem-card:hover {
-  box-shadow: 0 8px 32px rgba(224,122,160,0.1);
-  transform: translateY(-2px);
-}
-
-.problem-icon {
-  font-size: 1.8rem;
-  margin-bottom: 20px;
-  display: block;
-}
-
-.problem-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.3rem;
-  font-weight: 400;
-  color: var(--text);
-  margin-bottom: 12px;
-}
-
-.problem-desc {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.7;
-  font-weight: 300;
-}
-
-/* SOLUTION */
-.solution-section {
-  padding: 120px 48px;
-  background: linear-gradient(135deg, var(--pink-light) 0%, var(--sky-light) 100%);
-}
-
-.solution-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.steps-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 48px;
-  margin-top: 64px;
-}
-
-.step { position: relative; }
-
-.step-number {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 4rem;
-  font-weight: 300;
-  color: rgba(184,147,74,0.2);
-  line-height: 1;
-  margin-bottom: 24px;
-  display: block;
-}
-
-.step-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.4rem;
-  font-weight: 400;
-  color: var(--text);
-  margin-bottom: 12px;
-}
-
-.step-desc {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.7;
-  font-weight: 300;
-}
-
-.step-accent {
-  width: 32px;
-  height: 2px;
-  background: var(--pink-dark);
-  margin-bottom: 24px;
-  border-radius: 1px;
-}
-
-/* FEATURES */
-.features-section {
-  padding: 120px 48px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-  margin-top: 64px;
-}
-
-.feature-card {
-  background: var(--white);
-  padding: 40px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.feature-card:hover {
-  border-color: var(--pink);
-  box-shadow: 0 8px 32px rgba(224,122,160,0.08);
-  transform: translateY(-2px);
-}
-
-.feature-icon {
-  font-size: 1.4rem;
-  margin-bottom: 20px;
-  display: block;
-  color: var(--pink-dark);
-}
-
-.feature-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.3rem;
-  font-weight: 400;
-  color: var(--text);
-  margin-bottom: 12px;
-}
-
-.feature-desc {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  line-height: 1.7;
-  font-weight: 300;
-}
-
-/* COMPARISON */
-.comparison-section {
-  padding: 120px 48px;
-  background: var(--cream-2);
-}
-
-.comparison-inner {
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-.comparison-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 64px;
-  background: var(--white);
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-
-.comparison-table th {
-  padding: 16px 24px;
-  font-size: 0.65rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-weight: 600;
-  text-align: left;
-  background: var(--cream);
-  border-bottom: 1px solid var(--border);
-  color: var(--text-muted);
-}
-
-.comparison-table th.highlight { color: var(--pink-dark); }
-
-.comparison-table td {
-  padding: 14px 24px;
-  font-size: 0.85rem;
-  border-bottom: 1px solid var(--border);
-  color: var(--text-muted);
-  font-weight: 300;
-}
-
-.comparison-table td.feature-name { color: var(--text); font-weight: 400; }
-.comparison-table td.yes { color: var(--pink-dark); font-weight: 500; }
-.comparison-table td.no { color: var(--text-dim); }
-.comparison-table tr:hover td { background: var(--cream); }
-
-/* PRICING */
-.pricing-section {
-  padding: 120px 48px;
-  max-width: 1200px;
-  margin: 0 auto;
-  text-align: center;
-}
-
-.pricing-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-  margin-top: 64px;
-  max-width: 700px;
-  margin-left: auto;
-  margin-right: auto;
-  text-align: left;
-}
-
-.pricing-card {
-  background: var(--white);
-  padding: 48px 40px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  position: relative;
-}
-
-.pricing-card.featured {
-  border-color: var(--pink);
-  box-shadow: 0 16px 48px rgba(224,122,160,0.12);
-}
-
-.pricing-badge {
-  font-size: 0.58rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--white);
-  background: var(--pink-dark);
-  padding: 4px 12px;
-  margin-bottom: 24px;
-  display: inline-block;
-  font-weight: 600;
-  border-radius: 2px;
-}
-
-.pricing-plan {
-  font-size: 0.65rem;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-  display: block;
-}
-
-.pricing-price {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 3.5rem;
-  font-weight: 300;
-  color: var(--gold);
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.pricing-period {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  margin-bottom: 32px;
-  display: block;
-}
-
-.pricing-features {
-  list-style: none;
-  margin-bottom: 40px;
-}
-
-.pricing-features li {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 300;
-}
-
-.pricing-features li::before {
-  content: '✦';
-  color: var(--pink-dark);
-  font-size: 0.5rem;
-  flex-shrink: 0;
-}
-
-.pricing-cta {
-  display: block;
-  text-align: center;
-  padding: 14px;
-  font-size: 0.68rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s;
-  font-family: 'Inter', sans-serif;
-  border-radius: 2px;
-}
-
-.pricing-cta.outline {
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-}
-
-.pricing-cta.outline:hover { border-color: var(--gold); color: var(--gold); }
-
-.pricing-cta.filled {
-  background: var(--pink-dark);
-  color: var(--white);
-}
-
-.pricing-cta.filled:hover { background: var(--pink); color: var(--text); }
-
-.trial-note {
-  margin-top: 32px;
-  font-size: 0.75rem;
-  color: var(--text-dim);
-  letter-spacing: 1px;
-}
-
-/* TESTIMONIALS */
-.testimonials-section {
-  padding: 120px 48px;
-  background: linear-gradient(135deg, var(--sky-light) 0%, var(--pink-light) 100%);
-}
-
-.testimonials-inner { max-width: 1200px; margin: 0 auto; }
-
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-top: 64px;
-}
-
-.testimonial-card {
-  background: var(--white);
-  padding: 40px 32px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  transition: transform 0.2s;
-}
-
-.testimonial-card:hover { transform: translateY(-2px); }
-
-.testimonial-stars {
-  color: var(--gold);
-  font-size: 0.75rem;
-  letter-spacing: 4px;
-  margin-bottom: 20px;
-}
-
-.testimonial-quote {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.1rem;
-  font-weight: 300;
-  font-style: italic;
-  color: var(--text);
-  line-height: 1.6;
-  margin-bottom: 24px;
-}
-
-.testimonial-author {
-  font-size: 0.65rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-.testimonial-salon {
-  font-size: 0.65rem;
-  color: var(--pink-dark);
-  margin-top: 4px;
-  display: block;
-  letter-spacing: 1px;
-}
-
-/* CTA */
-.cta-section {
-  padding: 160px 48px;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  background: var(--cream);
-}
-
-.cta-bg {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(ellipse at 30% 50%, rgba(242,168,196,0.2) 0%, transparent 60%),
-    radial-gradient(ellipse at 70% 50%, rgba(123,184,212,0.15) 0%, transparent 60%);
-}
-
-.cta-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: clamp(2.5rem, 5vw, 5rem);
-  font-weight: 300;
-  color: var(--text);
-  margin-bottom: 24px;
-  position: relative;
-}
-
-.cta-title em { color: var(--pink-dark); font-style: italic; }
-
-.cta-sub {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin-bottom: 48px;
-  font-weight: 300;
-  position: relative;
-  line-height: 1.7;
-}
-
-.cta-actions {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  position: relative;
-}
-
-/* FOOTER */
-.footer {
-  padding: 40px 48px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  background: var(--white);
-}
-
-.footer-logo {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.1rem;
-  color: var(--gold);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-.footer-links { display: flex; gap: 32px; flex-wrap: wrap; }
-
-.footer-link {
-  font-size: 0.65rem;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.footer-link:hover { color: var(--pink-dark); }
-
-.footer-copy {
-  font-size: 0.65rem;
-  color: var(--text-dim);
-  letter-spacing: 1px;
-}
-
-/* RESPONSIVE */
-@media (max-width: 900px) {
-  .nav { padding: 20px 24px; }
-  .hero { padding: 100px 24px 120px; }
-  .hero-stats { display: none; }
-  .problem-grid, .steps-grid, .features-grid, .testimonials-grid { grid-template-columns: 1fr; }
-  .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
-  .problem-section, .features-section, .pricing-section { padding: 80px 24px; }
-  .solution-section, .comparison-section, .testimonials-section { padding: 80px 24px; }
-  .cta-section { padding: 100px 24px; }
-  .footer { padding: 32px 24px; flex-direction: column; text-align: center; }
-  .footer-links { justify-content: center; }
-}
-
-@media (max-width: 600px) {
-  .nav-links .nav-link { display: none; }
-  .hero-title { font-size: 2.8rem; }
-}
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+          --pink: #F4A7B9;
+          --pink-deep: #E8799A;
+          --pink-soft: #FEF1F5;
+          --pink-mid: #FADDEA;
+          --slate: #4A5568;
+          --slate-dark: #2D3748;
+          --slate-light: #718096;
+          --cream: #FAF7F5;
+          --cream-dark: #F3EDE8;
+          --white: #FFFFFF;
+          --text: #2D3748;
+          --text-light: #718096;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          background: var(--white);
+          color: var(--text);
+          overflow-x: hidden;
+          -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── NAV ── */
+        .nav {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          z-index: 100;
+          height: 68px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 6%;
+          transition: all 0.4s ease;
+          background: ${mounted && scrolled ? 'rgba(255,255,255,0.92)' : 'transparent'};
+          backdrop-filter: ${mounted && scrolled ? 'blur(20px)' : 'none'};
+          border-bottom: ${mounted && scrolled ? '1px solid rgba(244,167,185,0.15)' : 'none'};
+        }
+
+        .nav-logo {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          cursor: pointer;
+        }
+
+        .nav-logo-text {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: var(--slate-dark);
+          letter-spacing: -0.3px;
+        }
+
+        .nav-logo-text span {
+          color: var(--pink-deep);
+        }
+
+        .nav-logo-dot {
+          width: 8px;
+          height: 8px;
+          background: var(--pink);
+          border-radius: 50%;
+          margin-bottom: 12px;
+        }
+
+        .nav-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .btn-ghost {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 0.88rem;
+          font-weight: 500;
+          color: var(--slate);
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 9px 18px;
+          border-radius: 50px;
+          transition: all 0.2s;
+        }
+
+        .btn-ghost:hover {
+          background: var(--pink-soft);
+          color: var(--pink-deep);
+        }
+
+        .btn-pill {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 0.88rem;
+          font-weight: 600;
+          color: var(--white);
+          background: var(--slate-dark);
+          border: none;
+          cursor: pointer;
+          padding: 10px 24px;
+          border-radius: 50px;
+          transition: all 0.25s;
+          letter-spacing: -0.2px;
+        }
+
+        .btn-pill:hover {
+          background: var(--pink-deep);
+          transform: translateY(-1px);
+          box-shadow: 0 6px 20px rgba(232,121,154,0.35);
+        }
+
+        /* ── HERO ── */
+        .hero {
+          min-height: 100vh;
+          background: var(--cream);
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          align-items: center;
+          padding: 100px 6% 60px;
+          gap: 60px;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .hero::before {
+          content: '';
+          position: absolute;
+          width: 700px;
+          height: 700px;
+          background: radial-gradient(circle, rgba(244,167,185,0.18) 0%, transparent 65%);
+          top: -200px;
+          right: -100px;
+          pointer-events: none;
+        }
+
+        .hero-left { position: relative; z-index: 1; }
+
+        .hero-eyebrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: white;
+          border: 1px solid rgba(244,167,185,0.4);
+          border-radius: 50px;
+          padding: 7px 16px 7px 10px;
+          margin-bottom: 28px;
+          box-shadow: 0 2px 16px rgba(244,167,185,0.15);
+        }
+
+        .eyebrow-pill {
+          background: var(--pink);
+          color: white;
+          font-size: 0.6rem;
+          font-weight: 700;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          padding: 3px 10px;
+          border-radius: 50px;
+        }
+
+        .eyebrow-text {
+          font-size: 0.78rem;
+          color: var(--slate);
+          font-weight: 500;
+        }
+
+        .hero-title {
+          font-family: 'Playfair Display', serif;
+          font-size: clamp(2.6rem, 4.5vw, 3.8rem);
+          font-weight: 900;
+          line-height: 1.08;
+          letter-spacing: -1.5px;
+          color: var(--slate-dark);
+          margin-bottom: 20px;
+        }
+
+        .hero-title em {
+          font-style: italic;
+          color: var(--pink-deep);
+        }
+
+        .hero-desc {
+          font-size: 1.05rem;
+          color: var(--text-light);
+          line-height: 1.75;
+          font-weight: 400;
+          max-width: 440px;
+          margin-bottom: 36px;
+        }
+
+        .hero-cta-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          margin-bottom: 48px;
+        }
+
+        .btn-hero-primary {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: white;
+          background: var(--slate-dark);
+          border: none;
+          cursor: pointer;
+          padding: 15px 32px;
+          border-radius: 50px;
+          transition: all 0.25s;
+          letter-spacing: -0.3px;
+          box-shadow: 0 4px 20px rgba(45,55,72,0.25);
+        }
+
+        .btn-hero-primary:hover {
+          background: var(--pink-deep);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 28px rgba(232,121,154,0.4);
+        }
+
+        .btn-hero-link {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: var(--slate);
+          background: none;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          transition: color 0.2s;
+          padding: 0;
+        }
+
+        .btn-hero-link:hover { color: var(--pink-deep); }
+
+        .hero-trust {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          flex-wrap: wrap;
+        }
+
+        .trust-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 0.82rem;
+          color: var(--text-light);
+          font-weight: 400;
+        }
+
+        .trust-check {
+          width: 20px;
+          height: 20px;
+          background: var(--pink-mid);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.65rem;
+          color: var(--pink-deep);
+          flex-shrink: 0;
+        }
+
+        /* HERO RIGHT - Visual */
+        .hero-right {
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1;
+        }
+
+        .hero-visual-main {
+          background: white;
+          border-radius: 24px;
+          padding: 28px;
+          box-shadow: 0 24px 80px rgba(74,85,104,0.14);
+          width: 100%;
+          max-width: 380px;
+          position: relative;
+        }
+
+        .visual-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        }
+
+        .visual-salon-name {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: var(--slate-dark);
+        }
+
+        .visual-badge {
+          background: var(--pink-soft);
+          color: var(--pink-deep);
+          font-size: 0.65rem;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          padding: 4px 10px;
+          border-radius: 50px;
+          border: 1px solid var(--pink-mid);
+        }
+
+        .visual-stats-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
+
+        .visual-stat {
+          background: var(--cream);
+          border-radius: 12px;
+          padding: 14px 10px;
+          text-align: center;
+        }
+
+        .visual-stat-num {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.4rem;
+          font-weight: 700;
+          color: var(--slate-dark);
+          line-height: 1;
+          margin-bottom: 4px;
+        }
+
+        .visual-stat-label {
+          font-size: 0.62rem;
+          color: var(--text-light);
+          font-weight: 500;
+          letter-spacing: 0.3px;
+        }
+
+        .visual-bookings-title {
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: var(--slate);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          margin-bottom: 12px;
+        }
+
+        .visual-booking-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 10px 14px;
+          border-radius: 10px;
+          background: var(--cream);
+          margin-bottom: 8px;
+          transition: background 0.15s;
+        }
+
+        .visual-booking-row:last-child { margin-bottom: 0; }
+
+        .visual-booking-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .booking-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--pink), var(--pink-deep));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: white;
+          flex-shrink: 0;
+        }
+
+        .booking-name {
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: var(--slate-dark);
+          margin-bottom: 1px;
+        }
+
+        .booking-service {
+          font-size: 0.7rem;
+          color: var(--text-light);
+          font-weight: 400;
+        }
+
+        .booking-time {
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: var(--pink-deep);
+          background: var(--pink-soft);
+          padding: 4px 10px;
+          border-radius: 50px;
+        }
+
+        /* Floating cards */
+        .float-card {
+          position: absolute;
+          background: white;
+          border-radius: 16px;
+          padding: 14px 18px;
+          box-shadow: 0 8px 32px rgba(74,85,104,0.12);
+          white-space: nowrap;
+        }
+
+        .float-card-1 {
+          top: -20px;
+          left: -40px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .float-icon {
+          width: 36px;
+          height: 36px;
+          background: var(--pink-soft);
+          border-radius: 10px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1rem;
+        }
+
+        .float-card-text-main {
+          font-size: 0.82rem;
+          font-weight: 700;
+          color: var(--slate-dark);
+          margin-bottom: 1px;
+        }
+
+        .float-card-text-sub {
+          font-size: 0.68rem;
+          color: var(--text-light);
+        }
+
+        .float-card-2 {
+          bottom: 20px;
+          right: -30px;
+          text-align: center;
+        }
+
+        .float-card-2-num {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.6rem;
+          font-weight: 700;
+          color: var(--pink-deep);
+          line-height: 1;
+        }
+
+        .float-card-2-text {
+          font-size: 0.68rem;
+          color: var(--text-light);
+          margin-top: 2px;
+        }
+
+        /* ── SECTION BASE ── */
+        section {
+          padding: 100px 6%;
+        }
+
+        .section-tag {
+          font-size: 0.7rem;
+          font-weight: 700;
+          letter-spacing: 2.5px;
+          text-transform: uppercase;
+          color: var(--pink-deep);
+          display: block;
+          margin-bottom: 14px;
+        }
+
+        .section-title {
+          font-family: 'Playfair Display', serif;
+          font-size: clamp(1.9rem, 3.5vw, 2.8rem);
+          font-weight: 900;
+          letter-spacing: -1px;
+          line-height: 1.1;
+          color: var(--slate-dark);
+          margin-bottom: 14px;
+        }
+
+        .section-title em {
+          font-style: italic;
+          color: var(--pink-deep);
+        }
+
+        .section-sub {
+          font-size: 1rem;
+          color: var(--text-light);
+          line-height: 1.75;
+          font-weight: 400;
+          max-width: 520px;
+        }
+
+        /* ── LOGOS STRIP ── */
+        .logos-strip {
+          background: var(--cream-dark);
+          padding: 32px 6%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          overflow: hidden;
+          flex-wrap: wrap;
+        }
+
+        .logos-label {
+          font-size: 0.72rem;
+          font-weight: 600;
+          color: var(--text-light);
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+
+        .logos-items {
+          display: flex;
+          align-items: center;
+          gap: 40px;
+          flex-wrap: wrap;
+        }
+
+        .logo-salon {
+          font-family: 'Playfair Display', serif;
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--slate-light);
+          opacity: 0.7;
+          white-space: nowrap;
+        }
+
+        /* ── PROBLEM ── */
+        .problem-section {
+          background: var(--slate-dark);
+        }
+
+        .problem-section .section-title { color: white; }
+        .problem-section .section-sub { color: rgba(255,255,255,0.5); }
+        .problem-section .section-tag { color: var(--pink); }
+
+        .problem-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 20px;
+          margin-top: 56px;
+        }
+
+        .problem-card {
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 20px;
+          padding: 32px 28px;
+          transition: all 0.3s;
+        }
+
+        .problem-card:hover {
+          background: rgba(244,167,185,0.08);
+          border-color: rgba(244,167,185,0.2);
+          transform: translateY(-4px);
+        }
+
+        .problem-emoji {
+          font-size: 2rem;
+          margin-bottom: 18px;
+          display: block;
+        }
+
+        .problem-title {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.1rem;
+          font-weight: 700;
+          color: white;
+          margin-bottom: 10px;
+        }
+
+        .problem-desc {
+          font-size: 0.85rem;
+          color: rgba(255,255,255,0.45);
+          line-height: 1.75;
+          font-weight: 300;
+        }
+
+        /* ── HOW IT WORKS ── */
+        .how-section {
+          background: var(--cream);
+        }
+
+        .how-layout {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 80px;
+          align-items: center;
+          margin-top: 0;
+        }
+
+        .how-left { }
+
+        .steps-list {
+          margin-top: 48px;
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+        }
+
+        .step-item {
+          display: flex;
+          gap: 20px;
+          position: relative;
+          padding-bottom: 32px;
+        }
+
+        .step-item:last-child { padding-bottom: 0; }
+
+        .step-item::before {
+          content: '';
+          position: absolute;
+          left: 19px;
+          top: 44px;
+          bottom: 0;
+          width: 2px;
+          background: var(--pink-mid);
+        }
+
+        .step-item:last-child::before { display: none; }
+
+        .step-dot {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: var(--pink-soft);
+          border: 2px solid var(--pink-mid);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: 'Playfair Display', serif;
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--pink-deep);
+          flex-shrink: 0;
+          z-index: 1;
+          transition: all 0.2s;
+        }
+
+        .step-item:hover .step-dot {
+          background: var(--pink);
+          border-color: var(--pink);
+          color: white;
+        }
+
+        .step-text { padding-top: 8px; }
+
+        .step-title {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.05rem;
+          font-weight: 700;
+          color: var(--slate-dark);
+          margin-bottom: 6px;
+        }
+
+        .step-desc {
+          font-size: 0.85rem;
+          color: var(--text-light);
+          line-height: 1.7;
+          font-weight: 400;
+        }
+
+        .how-right {
+          background: white;
+          border-radius: 24px;
+          padding: 36px;
+          box-shadow: 0 20px 60px rgba(74,85,104,0.1);
+        }
+
+        .mini-site-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 24px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid var(--cream-dark);
+        }
+
+        .dot-row { display: flex; gap: 5px; }
+        .dot-r { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-r.red { background: #FC5F5A; }
+        .dot-r.yellow { background: #FDBA2C; }
+        .dot-r.green { background: #33CA5E; }
+
+        .mini-url {
+          flex: 1;
+          background: var(--cream);
+          border-radius: 6px;
+          padding: 5px 12px;
+          font-size: 0.72rem;
+          color: var(--text-light);
+          font-weight: 500;
+          text-align: center;
+        }
+
+        .mini-site-body { }
+
+        .mini-hero-img {
+          height: 100px;
+          background: linear-gradient(135deg, var(--pink-mid) 0%, var(--cream-dark) 100%);
+          border-radius: 12px;
+          margin-bottom: 16px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .mini-hero-img::after {
+          content: '✨';
+          font-size: 2rem;
+          opacity: 0.5;
+        }
+
+        .mini-salon-name {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.3rem;
+          font-weight: 700;
+          color: var(--slate-dark);
+          margin-bottom: 4px;
+        }
+
+        .mini-salon-sub {
+          font-size: 0.75rem;
+          color: var(--text-light);
+          margin-bottom: 16px;
+        }
+
+        .mini-services {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+          margin-bottom: 16px;
+        }
+
+        .mini-service {
+          background: var(--cream);
+          border-radius: 10px;
+          padding: 12px;
+        }
+
+        .mini-service-name {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--slate-dark);
+          margin-bottom: 2px;
+        }
+
+        .mini-service-price {
+          font-family: 'Playfair Display', serif;
+          font-size: 0.9rem;
+          font-weight: 700;
+          color: var(--pink-deep);
+        }
+
+        .mini-book-btn {
+          width: 100%;
+          background: var(--slate-dark);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          padding: 12px;
+          font-size: 0.82rem;
+          font-weight: 600;
+          cursor: default;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* ── FEATURES ── */
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 20px;
+          margin-top: 56px;
+        }
+
+        .feature-card {
+          background: var(--cream);
+          border: 1px solid transparent;
+          border-radius: 20px;
+          padding: 32px 28px;
+          transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+          background: white;
+          border-color: var(--pink-mid);
+          transform: translateY(-4px);
+          box-shadow: 0 16px 48px rgba(244,167,185,0.15);
+        }
+
+        .feat-icon {
+          width: 52px;
+          height: 52px;
+          background: var(--pink-soft);
+          border: 1px solid var(--pink-mid);
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 1.5rem;
+          margin-bottom: 20px;
+        }
+
+        .feat-title {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.05rem;
+          font-weight: 700;
+          color: var(--slate-dark);
+          margin-bottom: 8px;
+        }
+
+        .feat-desc {
+          font-size: 0.84rem;
+          color: var(--text-light);
+          line-height: 1.75;
+          font-weight: 400;
+        }
+
+        /* ── PRICING ── */
+        .pricing-section {
+          background: var(--cream);
+          text-align: center;
+        }
+
+        .pricing-section .section-sub { margin: 0 auto; }
+
+        .pricing-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 24px;
+          margin-top: 56px;
+          max-width: 680px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .price-card {
+          background: white;
+          border: 1.5px solid var(--cream-dark);
+          border-radius: 24px;
+          padding: 40px 32px;
+          text-align: left;
+          transition: all 0.3s;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .price-card.featured {
+          border-color: var(--pink);
+          box-shadow: 0 20px 60px rgba(244,167,185,0.25);
+        }
+
+        .price-card:hover {
+          transform: translateY(-6px);
+        }
+
+        .price-featured-bar {
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, var(--pink), var(--pink-deep));
+        }
+
+        .price-plan-badge {
+          display: inline-block;
+          font-size: 0.65rem;
+          font-weight: 700;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+          color: var(--text-light);
+          margin-bottom: 20px;
+        }
+
+        .price-card.featured .price-plan-badge { color: var(--pink-deep); }
+
+        .price-amount {
+          font-family: 'Playfair Display', serif;
+          font-size: 3.8rem;
+          font-weight: 900;
+          color: var(--slate-dark);
+          line-height: 1;
+          letter-spacing: -2px;
+          margin-bottom: 4px;
+        }
+
+        .price-period {
+          font-size: 0.82rem;
+          color: var(--text-light);
+          margin-bottom: 28px;
+          font-weight: 400;
+        }
+
+        .price-divider {
+          height: 1px;
+          background: var(--cream-dark);
+          margin-bottom: 24px;
+        }
+
+        .price-features {
+          list-style: none;
+          margin-bottom: 32px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .price-features li {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          font-size: 0.86rem;
+          color: var(--text-light);
+          font-weight: 400;
+          line-height: 1.5;
+        }
+
+        .price-feat-check {
+          width: 18px;
+          height: 18px;
+          background: var(--pink-soft);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.6rem;
+          color: var(--pink-deep);
+          flex-shrink: 0;
+          margin-top: 1px;
+        }
+
+        .btn-price {
+          width: 100%;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 0.9rem;
+          font-weight: 700;
+          padding: 15px;
+          border-radius: 50px;
+          border: none;
+          cursor: pointer;
+          transition: all 0.25s;
+          letter-spacing: -0.2px;
+        }
+
+        .btn-price-outline {
+          background: white;
+          color: var(--slate-dark);
+          border: 1.5px solid var(--slate-dark);
+        }
+
+        .btn-price-outline:hover {
+          background: var(--slate-dark);
+          color: white;
+          transform: translateY(-2px);
+        }
+
+        .btn-price-fill {
+          background: var(--slate-dark);
+          color: white;
+          box-shadow: 0 6px 20px rgba(45,55,72,0.25);
+        }
+
+        .btn-price-fill:hover {
+          background: var(--pink-deep);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 28px rgba(232,121,154,0.4);
+        }
+
+        /* ── TESTIMONIALS ── */
+        .testimonials-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          gap: 20px;
+          margin-top: 56px;
+        }
+
+        .testi-card {
+          background: white;
+          border: 1px solid var(--cream-dark);
+          border-radius: 20px;
+          padding: 32px 28px;
+          transition: all 0.3s;
+        }
+
+        .testi-card:hover {
+          border-color: var(--pink-mid);
+          transform: translateY(-4px);
+          box-shadow: 0 16px 48px rgba(244,167,185,0.12);
+        }
+
+        .testi-stars {
+          color: var(--pink);
+          font-size: 0.85rem;
+          letter-spacing: 3px;
+          margin-bottom: 16px;
+        }
+
+        .testi-quote {
+          font-size: 0.92rem;
+          color: var(--slate-dark);
+          line-height: 1.8;
+          font-weight: 400;
+          font-style: italic;
+          margin-bottom: 24px;
+          font-family: 'Playfair Display', serif;
+        }
+
+        .testi-author {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .testi-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, var(--pink-mid), var(--pink));
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: 'Playfair Display', serif;
+          font-size: 1rem;
+          font-weight: 700;
+          color: white;
+          flex-shrink: 0;
+        }
+
+        .testi-name {
+          font-size: 0.88rem;
+          font-weight: 700;
+          color: var(--slate-dark);
+          margin-bottom: 2px;
+          font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        .testi-salon {
+          font-size: 0.74rem;
+          color: var(--pink-deep);
+          font-weight: 500;
+        }
+
+        /* ── CTA BAND ── */
+        .cta-band {
+          background: var(--slate-dark);
+          padding: 100px 6%;
+          display: grid;
+          grid-template-columns: 1fr auto;
+          align-items: center;
+          gap: 48px;
+        }
+
+        .cta-band .section-title { color: white; margin-bottom: 8px; }
+        .cta-band .section-tag { margin-bottom: 10px; }
+
+        .cta-sub {
+          font-size: 1rem;
+          color: rgba(255,255,255,0.5);
+          font-weight: 400;
+          line-height: 1.6;
+        }
+
+        .cta-right {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 12px;
+          flex-shrink: 0;
+        }
+
+        .btn-cta-main {
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          font-size: 1rem;
+          font-weight: 700;
+          color: var(--slate-dark);
+          background: white;
+          border: none;
+          cursor: pointer;
+          padding: 16px 36px;
+          border-radius: 50px;
+          transition: all 0.25s;
+          white-space: nowrap;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+
+        .btn-cta-main:hover {
+          background: var(--pink);
+          color: white;
+          transform: translateY(-2px);
+          box-shadow: 0 12px 32px rgba(244,167,185,0.4);
+        }
+
+        .cta-note {
+          font-size: 0.74rem;
+          color: rgba(255,255,255,0.3);
+          font-weight: 400;
+        }
+
+        /* ── FOOTER ── */
+        footer {
+          background: #1A202C;
+          padding: 48px 6%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 20px;
+          border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .footer-logo {
+          font-family: 'Playfair Display', serif;
+          font-size: 1.2rem;
+          font-weight: 700;
+          color: white;
+        }
+
+        .footer-logo span { color: var(--pink); }
+
+        .footer-links {
+          display: flex;
+          gap: 28px;
+          flex-wrap: wrap;
+        }
+
+        .footer-links a {
+          font-size: 0.82rem;
+          color: rgba(255,255,255,0.35);
+          text-decoration: none;
+          font-weight: 400;
+          transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--pink); }
+
+        .footer-copy {
+          font-size: 0.76rem;
+          color: rgba(255,255,255,0.2);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 900px) {
+          .hero {
+            grid-template-columns: 1fr;
+            text-align: center;
+            padding: 110px 6% 60px;
+          }
+
+          .hero-desc { margin-left: auto; margin-right: auto; }
+
+          .hero-cta-row { justify-content: center; }
+
+          .hero-trust { justify-content: center; }
+
+          .hero-right { display: none; }
+
+          .how-layout {
+            grid-template-columns: 1fr;
+            gap: 48px;
+          }
+
+          .cta-band {
+            grid-template-columns: 1fr;
+            text-align: center;
+          }
+
+          .cta-right { align-items: center; }
+        }
+
+        @media (max-width: 600px) {
+          .nav { padding: 0 5%; }
+          section { padding: 72px 5%; }
+          .cta-band { padding: 72px 5%; }
+          footer { padding: 40px 5%; flex-direction: column; text-align: center; }
+          .footer-links { justify-content: center; }
+          .hero { padding: 100px 5% 60px; }
+          .logos-strip { padding: 28px 5%; flex-direction: column; align-items: flex-start; gap: 16px; }
+          .float-card { display: none; }
+        }
       `}</style>
 
       {/* NAV */}
       <nav className="nav">
-        <a href="/" className="nav-logo">
-          BeautyGlow
-        </a>
-        <div className="nav-links">
-          <a href="#features" className="nav-link">
-            Fonctionnalités
-          </a>
-          <a href="#pricing" className="nav-link">
-            Tarifs
-          </a>
-          <a href="/auth/login" className="nav-link">
-            Connexion
-          </a>
-          <a href="/auth/signup" className="nav-cta">
-            Essai gratuit
-          </a>
+        <div className="nav-logo" onClick={() => router.push('/')}>
+          <div className="nav-logo-text">Beauty<span>Glow</span><span style={{color:'var(--pink)',fontSize:'0.6rem',verticalAlign:'super',marginLeft:'1px'}}>.tn</span></div>
+        </div>
+        <div className="nav-right">
+          <button className="btn-ghost" onClick={() => router.push('/auth/login')}>Se connecter</button>
+          <button className="btn-pill" onClick={() => router.push('/auth/signup')}>Essai gratuit</button>
         </div>
       </nav>
 
       {/* HERO */}
       <section className="hero">
-        <div className="hero-bg" />
-        <div className="hero-grid-lines" />
-        <div className="hero-content">
-          <div className="hero-tag">Plateforme N°1 pour salons en Tunisie</div>
+        <div className="hero-left">
+          <div className="hero-eyebrow">
+            <span className="eyebrow-pill">Nouveau</span>
+            <span className="eyebrow-text">Plateforme #1 pour salons en Tunisie</span>
+          </div>
           <h1 className="hero-title">
-            Votre salon mérite
-            <br />
-            <em>plus qu'Instagram</em>
+            Votre salon,<br />
+            <em>enfin en ligne</em><br />
+            et rentable.
           </h1>
-          <p className="hero-sub">
-            Site web professionnel + réservation en ligne en 5 minutes. Vos
-            clientes réservent 24h/24 — vous ne ratez plus aucun rendez-vous.
+          <p className="hero-desc">
+            Créez votre site professionnel avec réservation en ligne en 5 minutes.
+            Vos clientes réservent 24h/24 — même quand vous dormez.
           </p>
-          <div className="hero-actions">
-            <a href="/auth/signup" className="btn-primary">
-              Commencer gratuitement →
-            </a>
-            <a href="#features" className="btn-secondary">
-              Voir comment ça marche
-            </a>
+          <div className="hero-cta-row">
+            <button className="btn-hero-primary" onClick={() => router.push('/auth/signup')}>
+              Commencer gratuitement
+            </button>
+            <button className="btn-hero-link" onClick={() => router.push('/auth/login')}>
+              Voir une démo <span>→</span>
+            </button>
+          </div>
+          <div className="hero-trust">
+            {['14 jours gratuits', 'Aucune carte requise', 'Configuration en 5min'].map((t, i) => (
+              <div key={i} className="trust-item">
+                <div className="trust-check">✓</div>
+                <span>{t}</span>
+              </div>
+            ))}
           </div>
         </div>
-        <div className="hero-stats">
-          <div>
-            <span className="hero-stat-number">5 min</span>
-            <span className="hero-stat-label">Pour tout configurer</span>
+
+        <div className="hero-right">
+          {/* Floating card top left */}
+          <div className="float-card float-card-1">
+            <div className="float-icon">📅</div>
+            <div>
+              <div className="float-card-text-main">Nouvelle réservation !</div>
+              <div className="float-card-text-sub">Amira — Coupe femme · 14h00</div>
+            </div>
           </div>
-          <div>
-            <span className="hero-stat-number">14j</span>
-            <span className="hero-stat-label">D'essai gratuit</span>
+
+          {/* Main card */}
+          <div className="hero-visual-main">
+            <div className="visual-header">
+              <div className="visual-salon-name">Salon Yasmine</div>
+              <div className="visual-badge">En ligne</div>
+            </div>
+            <div className="visual-stats-row">
+              <div className="visual-stat">
+                <div className="visual-stat-num">24</div>
+                <div className="visual-stat-label">RDV ce mois</div>
+              </div>
+              <div className="visual-stat">
+                <div className="visual-stat-num">98%</div>
+                <div className="visual-stat-label">Confirmés</div>
+              </div>
+              <div className="visual-stat">
+                <div className="visual-stat-num">★4.9</div>
+                <div className="visual-stat-label">Avis clients</div>
+              </div>
+            </div>
+            <div className="visual-bookings-title">Aujourd&apos;hui</div>
+            {[
+              { init: 'A', name: 'Amira B.', service: 'Coupe femme', time: '14:00' },
+              { init: 'S', name: 'Sonia M.', service: 'Coloration', time: '15:30' },
+              { init: 'L', name: 'Leila K.', service: 'Manucure', time: '17:00' },
+            ].map((b, i) => (
+              <div key={i} className="visual-booking-row">
+                <div className="visual-booking-left">
+                  <div className="booking-avatar">{b.init}</div>
+                  <div>
+                    <div className="booking-name">{b.name}</div>
+                    <div className="booking-service">{b.service}</div>
+                  </div>
+                </div>
+                <div className="booking-time">{b.time}</div>
+              </div>
+            ))}
           </div>
-          <div>
-            <span className="hero-stat-number">89 TND</span>
-            <span className="hero-stat-label">Par mois seulement</span>
+
+          {/* Floating card bottom right */}
+          <div className="float-card float-card-2">
+            <div className="float-card-2-num">+40%</div>
+            <div className="float-card-2-text">réservations</div>
           </div>
         </div>
       </section>
 
+      {/* LOGOS STRIP */}
+      <div className="logos-strip">
+        <span className="logos-label">Ils nous font confiance</span>
+        <div className="logos-items">
+          {['Salon Belle', 'Chic Beauty', 'Élite Coiffure', 'Studio Amira', 'Glam Tunis'].map((s, i) => (
+            <div key={i} className="logo-salon">{s}</div>
+          ))}
+        </div>
+      </div>
+
       {/* PROBLEM */}
-      <section
-        style={{ padding: "120px 48px", borderTop: "1px solid #1a1a1a" }}
-      >
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <div className="section-tag">Le problème</div>
-          <h2 className="section-title">
-            80% des salons tunisiens perdent des clientes chaque jour
-          </h2>
-          <div className="problem-grid">
-            <div className="problem-card">
-              <span className="problem-icon">📵</span>
-              <h3 className="problem-title">Appels manqués</h3>
-              <p className="problem-desc">
-                Vous êtes en plein travail — le téléphone sonne, vous ne pouvez
-                pas répondre. La cliente appelle la concurrence.
-              </p>
+      <section className="problem-section">
+        <span className="section-tag">Le vrai problème</span>
+        <h2 className="section-title">Vous perdez des clientes<br /><em>chaque jour</em> sans le savoir</h2>
+        <p className="section-sub">80% des salons tunisiens dépendent encore des appels manqués et des DMs Instagram.</p>
+        <div className="problem-grid">
+          {[
+            { icon: '📵', title: 'Appels manqués', desc: 'Une cliente appelle, personne ne répond. Elle réserve chez votre concurrente.' },
+            { icon: '📱', title: 'Instagram ne suffit plus', desc: 'Pas de réservation en ligne, pas de tarifs clairs, pas d\'image professionnelle.' },
+            { icon: '📋', title: 'Chaos de gestion', desc: 'Papier, WhatsApp, mémoire… Les double-réservations arrivent trop souvent.' },
+            { icon: '🌙', title: 'Fermé la nuit', desc: 'Vos clientes pensent à réserver à 22h. Votre téléphone est éteint.' },
+          ].map((p, i) => (
+            <div key={i} className="problem-card">
+              <span className="problem-emoji">{p.icon}</span>
+              <div className="problem-title">{p.title}</div>
+              <div className="problem-desc">{p.desc}</div>
             </div>
-            <div className="problem-card">
-              <span className="problem-icon">📱</span>
-              <h3 className="problem-title">Instagram ne suffit plus</h3>
-              <p className="problem-desc">
-                Un profil Instagram c'est bien, mais vos clientes ne peuvent pas
-                réserver directement. Elles doivent envoyer un message,
-                attendre...
-              </p>
-            </div>
-            <div className="problem-card">
-              <span className="problem-icon">📋</span>
-              <h3 className="problem-title">Agenda papier chaotique</h3>
-              <p className="problem-desc">
-                Double réservations, rendez-vous oubliés, pas de vue d'ensemble.
-                Gérer votre agenda vous prend plus de temps que vos clientes.
-              </p>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="solution-section" id="features">
-        <div className="solution-inner">
-          <div className="section-tag">La solution</div>
-          <h2 className="section-title">
-            Prêt en 5 minutes,
-            <br />
-            <em>actif pour toujours</em>
-          </h2>
-          <div className="steps-grid">
-            <div className="step">
-              <span className="step-number">01</span>
-              <div className="step-accent" />
-              <h3 className="step-title">Créez votre compte</h3>
-              <p className="step-desc">
-                Inscrivez-vous en 2 minutes. Ajoutez le nom de votre salon, vos
-                services et vos photos. C'est tout.
-              </p>
+      <section className="how-section">
+        <div className="how-layout">
+          <div className="how-left">
+            <span className="section-tag">Comment ça marche</span>
+            <h2 className="section-title">En ligne en<br /><em>5 minutes</em> chrono</h2>
+            <p className="section-sub">Pas de compétences techniques requises. Vraiment.</p>
+            <div className="steps-list">
+              {[
+                { n: '1', title: 'Créez votre compte', desc: 'Nom du salon, téléphone, adresse. 2 minutes max.' },
+                { n: '2', title: 'Ajoutez vos services', desc: 'Prix, durée, catégorie. Votre menu en ligne est prêt.' },
+                { n: '3', title: 'Choisissez votre thème', desc: 'Un design luxueux adapté à votre identité visuelle.' },
+                { n: '4', title: 'Partagez votre lien', desc: 'monsalon.beautyglow.tn — vos clientes réservent instantanément.' },
+              ].map((s, i) => (
+                <div key={i} className="step-item">
+                  <div className="step-dot">{s.n}</div>
+                  <div className="step-text">
+                    <div className="step-title">{s.title}</div>
+                    <div className="step-desc">{s.desc}</div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="step">
-              <span className="step-number">02</span>
-              <div className="step-accent" />
-              <h3 className="step-title">Votre site est en ligne</h3>
-              <p className="step-desc">
-                Obtenez instantanément votre adresse professionnelle :
-                votresalon.beautyglow.tn — partagez-la partout.
-              </p>
+          </div>
+          <div className="how-right">
+            <div className="mini-site-header">
+              <div className="dot-row">
+                <div className="dot-r red" />
+                <div className="dot-r yellow" />
+                <div className="dot-r green" />
+              </div>
+              <div className="mini-url">yasmine.beautyglow.tn</div>
             </div>
-            <div className="step">
-              <span className="step-number">03</span>
-              <div className="step-accent" />
-              <h3 className="step-title">Les réservations arrivent</h3>
-              <p className="step-desc">
-                Vos clientes réservent en ligne 24h/24. Vous recevez une
-                notification et gérez tout depuis votre dashboard.
-              </p>
+            <div className="mini-site-body">
+              <div className="mini-hero-img" />
+              <div className="mini-salon-name">Salon Yasmine</div>
+              <div className="mini-salon-sub">📍 Avenue Habib Bourguiba, Tunis</div>
+              <div className="mini-services">
+                {[
+                  { name: 'Coupe femme', price: '35 TND' },
+                  { name: 'Coloration', price: '80 TND' },
+                  { name: 'Brushing', price: '25 TND' },
+                  { name: 'Manucure', price: '20 TND' },
+                ].map((s, i) => (
+                  <div key={i} className="mini-service">
+                    <div className="mini-service-name">{s.name}</div>
+                    <div className="mini-service-price">{s.price}</div>
+                  </div>
+                ))}
+              </div>
+              <button className="mini-book-btn">Réserver un rendez-vous →</button>
             </div>
           </div>
         </div>
       </section>
 
       {/* FEATURES */}
-      <section className="features-section">
-        <div className="section-tag">Ce que vous obtenez</div>
-        <h2 className="section-title">Tout ce dont votre salon a besoin</h2>
+      <section>
+        <span className="section-tag">Fonctionnalités</span>
+        <h2 className="section-title">Tout ce dont votre salon<br /><em>a vraiment besoin</em></h2>
         <div className="features-grid">
-          <div className="feature-card">
-            <span className="feature-icon">✦</span>
-            <h3 className="feature-title">Site web professionnel</h3>
-            <p className="feature-desc">
-              Un vrai site web à votre image — pas juste une page Instagram.
-              Design luxueux, rapide, optimisé pour Google.
-            </p>
-          </div>
-          <div className="feature-card">
-            <span className="feature-icon">◎</span>
-            <h3 className="feature-title">Réservation en ligne 24/7</h3>
-            <p className="feature-desc">
-              Vos clientes réservent même à minuit. Plus d'appels manqués, plus
-              de messages WhatsApp sans réponse.
-            </p>
-          </div>
-          <div className="feature-card">
-            <span className="feature-icon">◉</span>
-            <h3 className="feature-title">Dashboard complet</h3>
-            <p className="feature-desc">
-              Gérez vos réservations, services, photos et clientes depuis un
-              tableau de bord simple et élégant.
-            </p>
-          </div>
-          <div className="feature-card">
-            <span className="feature-icon">◈</span>
-            <h3 className="feature-title">Galerie avant/après</h3>
-            <p className="feature-desc">
-              Montrez vos réalisations avec des photos avant/après par service.
-              Vos clientes voient votre travail, elles réservent.
-            </p>
-          </div>
-          <div className="feature-card">
-            <span className="feature-icon">★</span>
-            <h3 className="feature-title">Témoignages clients</h3>
-            <p className="feature-desc">
-              Affichez les avis de vos clientes satisfaites directement sur
-              votre site. La preuve sociale qui convertit.
-            </p>
-          </div>
-          <div className="feature-card">
-            <span className="feature-icon">◻</span>
-            <h3 className="feature-title">Notifications instantanées</h3>
-            <p className="feature-desc">
-              Recevez un email dès qu'une nouvelle réservation arrive. Confirmez
-              en un clic depuis votre dashboard.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* COMPARISON */}
-      <section className="comparison-section">
-        <div className="comparison-inner">
-          <div className="section-tag">Comparaison</div>
-          <h2 className="section-title">
-            Pourquoi BeautyGlow
-            <br />
-            et pas la concurrence?
-          </h2>
-          <table className="comparison-table">
-            <thead>
-              <tr>
-                <th>Fonctionnalité</th>
-                <th>Concurrence</th>
-                <th className="highlight">BeautyGlow</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="feature-name">Prix mensuel</td>
-                <td>99-199 TND</td>
-                <td className="yes">89 TND ✦</td>
-              </tr>
-              <tr>
-                <td className="feature-name">Vrai site web</td>
-                <td className="no">✕ Annuaire seulement</td>
-                <td className="yes">✓ votresalon.beautyglow.tn</td>
-              </tr>
-              <tr>
-                <td className="feature-name">Réservation en ligne</td>
-                <td className="no">✕ WhatsApp manuel</td>
-                <td className="yes">✓ Automatique 24/7</td>
-              </tr>
-              <tr>
-                <td className="feature-name">Dashboard propriétaire</td>
-                <td className="no">✕ Aucun</td>
-                <td className="yes">✓ Complet</td>
-              </tr>
-              <tr>
-                <td className="feature-name">Galerie avant/après</td>
-                <td className="no">✕</td>
-                <td className="yes">✓</td>
-              </tr>
-              <tr>
-                <td className="feature-name">Configuration</td>
-                <td>Inconnu</td>
-                <td className="yes">✓ 5 minutes</td>
-              </tr>
-              <tr>
-                <td className="feature-name">Essai gratuit</td>
-                <td className="no">✕</td>
-                <td className="yes">✓ 14 jours</td>
-              </tr>
-            </tbody>
-          </table>
+          {[
+            { icon: '🌐', title: 'Site web professionnel', desc: 'Votre propre adresse monsalon.beautyglow.tn avec un design luxueux, rapide et mobile-first.' },
+            { icon: '📅', title: 'Réservation en ligne 24/7', desc: 'Vos clientes réservent quand elles veulent. Vous confirmez d\'un seul clic depuis le dashboard.' },
+            { icon: '📊', title: 'Dashboard complet', desc: 'RDV, services, photos, clientes et statistiques. Tout au même endroit, simple et clair.' },
+            { icon: '🖼️', title: 'Galerie & Avant/Après', desc: 'Montrez votre travail. Les photos convertissent bien mieux que les mots.' },
+            { icon: '📧', title: 'Notifications instantanées', desc: 'Recevez un email à chaque nouvelle réservation. Ne ratez plus jamais une cliente.' },
+            { icon: '🎨', title: 'Thèmes personnalisables', desc: 'Lumière, Blanc, Éclat ou Azur. Choisissez l\'identité qui correspond à votre salon.' },
+          ].map((f, i) => (
+            <div key={i} className="feature-card">
+              <div className="feat-icon">{f.icon}</div>
+              <div className="feat-title">{f.title}</div>
+              <div className="feat-desc">{f.desc}</div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* PRICING */}
-      <section className="pricing-section" id="pricing">
-        <div className="section-tag" style={{ justifyContent: "center" }}>
-          Tarifs simples
-        </div>
-        <h2
-          className="section-title"
-          style={{ margin: "0 auto 0", textAlign: "center" }}
-        >
-          Un rendez-vous suffit
-          <br />à rentabiliser l'abonnement
-        </h2>
+      <section className="pricing-section">
+        <span className="section-tag">Tarifs simples</span>
+        <h2 className="section-title">Un rendez-vous suffit<br />à <em>rentabiliser</em></h2>
+        <p className="section-sub">Pas d&apos;engagement. Annulez quand vous voulez.</p>
         <div className="pricing-grid">
-          <div className="pricing-card">
-            <span className="pricing-plan">Basic</span>
-            <div className="pricing-price">89</div>
-            <span className="pricing-period">TND / mois</span>
-            <ul className="pricing-features">
-              <li>Site web professionnel</li>
-              <li>Réservation en ligne</li>
-              <li>Dashboard complet</li>
-              <li>Galerie photos</li>
-              <li>Avant/après par service</li>
-              <li>Notifications email</li>
+          <div className="price-card">
+            <div className="price-plan-badge">BASIC</div>
+            <div className="price-amount">89</div>
+            <div className="price-period">TND / mois</div>
+            <div className="price-divider" />
+            <ul className="price-features">
+              {['Site web professionnel', 'Réservation en ligne', 'Dashboard complet', 'Galerie photos', 'Avant/après par service', 'Notifications email'].map((f, i) => (
+                <li key={i}><div className="price-feat-check">✓</div><span>{f}</span></li>
+              ))}
             </ul>
-            <a href="/auth/signup" className="pricing-cta outline">
+            <button className="btn-price btn-price-outline" onClick={() => router.push('/auth/signup')}>
               Commencer — 14j gratuit
-            </a>
+            </button>
           </div>
-          <div className="pricing-card featured">
-            <span className="pricing-badge">Populaire</span>
-            <span className="pricing-plan">Pro</span>
-            <div className="pricing-price">149</div>
-            <span className="pricing-period">TND / mois</span>
-            <ul className="pricing-features">
-              <li>Tout le plan Basic</li>
-              <li>Domaine personnalisé</li>
-              <li>Campagnes email clients</li>
-              <li>Statistiques avancées</li>
-              <li>Support prioritaire</li>
-              <li>Multi-staff (bientôt)</li>
+          <div className="price-card featured">
+            <div className="price-featured-bar" />
+            <div className="price-plan-badge">PRO — POPULAIRE</div>
+            <div className="price-amount">149</div>
+            <div className="price-period">TND / mois</div>
+            <div className="price-divider" />
+            <ul className="price-features">
+              {['Tout le plan Basic', 'Domaine personnalisé', 'Campagnes email clients', 'Statistiques avancées', 'Support prioritaire', 'Multi-staff (bientôt)'].map((f, i) => (
+                <li key={i}><div className="price-feat-check">✓</div><span>{f}</span></li>
+              ))}
             </ul>
-            <a href="/auth/signup" className="pricing-cta filled">
+            <button className="btn-price btn-price-fill" onClick={() => router.push('/auth/signup')}>
               Commencer — 14j gratuit
-            </a>
+            </button>
           </div>
         </div>
-        <p className="trial-note">
-          ✦ 14 jours d'essai gratuit — Aucune carte bancaire requise
-        </p>
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="testimonials-section">
-        <div className="testimonials-inner">
-          <div className="section-tag">Ils nous font confiance</div>
-          <h2 className="section-title">Ce que disent nos salons</h2>
-          <div className="testimonials-grid">
-            <div className="testimonial-card">
-              <div className="testimonial-stars">★★★★★</div>
-              <p className="testimonial-quote">
-                "Depuis BeautyGlow, je reçois des réservations même la nuit. Mes
-                clientes adorent pouvoir réserver depuis leur téléphone."
-              </p>
-              <div className="testimonial-author">Yasmine B.</div>
-              <span className="testimonial-salon">Salon Yasmine, Tunis</span>
+      <section>
+        <span className="section-tag">Témoignages</span>
+        <h2 className="section-title">Elles nous font <em>confiance</em></h2>
+        <div className="testimonials-grid">
+          {[
+            { init: 'Y', name: 'Yasmine B.', salon: 'Salon Yasmine, Tunis', text: 'Avant BeautyGlow, je perdais des clientes à cause des appels manqués. Maintenant elles réservent la nuit et je vois tout dans mon dashboard le matin.' },
+            { init: 'L', name: 'Latifa M.', salon: 'Salon Latifa, Sfax', text: 'Le site est tellement professionnel. Mes clientes pensaient que j\'avais engagé un développeur ! J\'ai tout configuré moi-même en 10 minutes.' },
+            { init: 'A', name: 'Amira K.', salon: 'Beauty Amira, Sousse', text: 'Mes réservations ont augmenté de 40% dès le premier mois. Le système de réservation en ligne change vraiment la vie.' },
+          ].map((t, i) => (
+            <div key={i} className="testi-card">
+              <div className="testi-stars">★★★★★</div>
+              <p className="testi-quote">&ldquo;{t.text}&rdquo;</p>
+              <div className="testi-author">
+                <div className="testi-avatar">{t.init}</div>
+                <div>
+                  <div className="testi-name">{t.name}</div>
+                  <div className="testi-salon">{t.salon}</div>
+                </div>
+              </div>
             </div>
-            <div className="testimonial-card">
-              <div className="testimonial-stars">★★★★★</div>
-              <p className="testimonial-quote">
-                "En 5 minutes j'avais mon site en ligne. Le dashboard est
-                tellement simple à utiliser. Je recommande à toutes mes
-                collègues."
-              </p>
-              <div className="testimonial-author">Amira T.</div>
-              <span className="testimonial-salon">Salon Éclat, Sfax</span>
-            </div>
-            <div className="testimonial-card">
-              <div className="testimonial-stars">★★★★★</div>
-              <p className="testimonial-quote">
-                "J'ai arrêté de perdre des clientes à cause des appels manqués.
-                BeautyGlow a changé ma façon de gérer mon salon."
-              </p>
-              <div className="testimonial-author">Nour M.</div>
-              <span className="testimonial-salon">Beauty Nour, Sousse</span>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="cta-section">
-        <div className="cta-bg" />
-        <h2 className="cta-title">
-          Prête à faire briller
-          <br />
-          <em>votre salon en ligne?</em>
-        </h2>
-        <p className="cta-sub">
-          Rejoignez les salons tunisiens qui ont choisi BeautyGlow.
-          <br />
-          14 jours gratuits — aucune carte bancaire requise.
-        </p>
-        <div className="cta-actions">
-          <a href="/auth/signup" className="btn-primary">
-            Créer mon site maintenant →
-          </a>
-          <a href="/auth/login" className="btn-secondary">
-            J'ai déjà un compte
-          </a>
+      {/* CTA BAND */}
+      <div className="cta-band">
+        <div>
+          <span className="section-tag">Prête à briller ?</span>
+          <h2 className="section-title">Lancez votre salon<br />en ligne <em>aujourd&apos;hui</em></h2>
+          <p className="cta-sub">14 jours gratuits. Aucune carte bancaire. Configuration en 5 minutes.</p>
         </div>
-      </section>
+        <div className="cta-right">
+          <button className="btn-cta-main" onClick={() => router.push('/auth/signup')}>
+            Créer mon site gratuitement →
+          </button>
+          <span className="cta-note">✦ Aucun engagement — Annulez quand vous voulez</span>
+        </div>
+      </div>
 
       {/* FOOTER */}
-      <footer className="footer">
-        <div className="footer-logo">BeautyGlow</div>
+      <footer>
+        <div className="footer-logo">Beauty<span>Glow</span>.tn</div>
         <div className="footer-links">
-          <a href="#features" className="footer-link">
-            Fonctionnalités
-          </a>
-          <a href="#pricing" className="footer-link">
-            Tarifs
-          </a>
-          <a href="/auth/signup" className="footer-link">
-            S'inscrire
-          </a>
-          <a href="/auth/login" className="footer-link">
-            Connexion
-          </a>
+          <a href="#">Accueil</a>
+          <a href="#">Tarifs</a>
+          <a href="#">Contact</a>
+          <a href="#">Confidentialité</a>
         </div>
-        <div className="footer-copy">© 2026 BeautyGlow — beautyglow.tn</div>
+        <div className="footer-copy">© 2026 BeautyGlow. Tous droits réservés.</div>
       </footer>
     </>
-  );
+  )
 }
