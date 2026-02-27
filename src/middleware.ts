@@ -1,31 +1,27 @@
-// src/middleware.ts
-// 1. Handles subdomain routing — rewrites requests to /sites/[businessId]
-// 2. Protects /dashboard routes — redirects to /auth/login if not authenticated
-
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
-  
-  // Extract subdomain — works for both localhost and beautyglow.tn
-  // e.g. "salonbelle.localhost:3000" → "salonbelle"
-  // e.g. "salonbelle.beautyglow.tn" → "salonbelle"
-  const mainDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'
-  const subdomain = hostname.replace(`.${mainDomain}`, '')
 
+  // All main domains — never treat as subdomain
+  const isMainDomain =
+    hostname === 'beautyglow.tn' ||
+    hostname === 'www.beautyglow.tn' ||
+    hostname === 'beautyglow-phi.vercel.app' ||
+    hostname.startsWith('localhost')
 
-  // If there's a subdomain and it's not www — serve the salon's public website
-  const isSubdomain = subdomain && subdomain !== mainDomain && subdomain !== 'www'
-
-  if (isSubdomain) {
-    // Rewrite to /sites/[subdomain] — we'll look up the business there
-    return NextResponse.rewrite(
-      new URL(`/sites/${subdomain}${request.nextUrl.pathname}`, request.url)
-    )
+  if (!isMainDomain) {
+    // Has a real subdomain — serve salon public site
+    const subdomain = hostname.split('.')[0]
+    if (subdomain && subdomain !== 'www') {
+      return NextResponse.rewrite(
+        new URL(`/sites/${subdomain}${request.nextUrl.pathname}`, request.url)
+      )
+    }
   }
 
-  // For main domain — handle auth protection
+  // Main domain — handle auth protection
   const supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -45,7 +41,6 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Protect /dashboard
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard')
   if (isProtectedRoute && !user) {
     return NextResponse.redirect(new URL('/auth/login', request.url))
