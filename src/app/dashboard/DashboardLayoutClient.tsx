@@ -365,11 +365,12 @@ export default function DashboardLayoutClient({ business, children }: Props) {
 
             <a
               href={`${protocol}://${business.subdomain}.${domain}`}
+              
               target="_blank"
               className="sidebar-salon-link"
             >
               {business.subdomain}.beautyglow.tn ↗
-            </a>
+            </a> console.log(`${protocol}://${business.subdomain}.${domain}`)
           </div>
 
           <nav className="sidebar-nav">
