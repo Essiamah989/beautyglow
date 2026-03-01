@@ -4,15 +4,14 @@ import { NextResponse, type NextRequest } from 'next/server'
 export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || ''
 
-  // All main domains — never treat as subdomain
   const isMainDomain =
     hostname === 'beautyglow.tn' ||
     hostname === 'www.beautyglow.tn' ||
     hostname === 'beautyglow-phi.vercel.app' ||
+    hostname === 'beautyglow-git-main-essiamah989s-projects.vercel.app' ||
     hostname.startsWith('localhost')
 
   if (!isMainDomain) {
-    // Has a real subdomain — serve salon public site
     const subdomain = hostname.split('.')[0]
     if (subdomain && subdomain !== 'www') {
       return NextResponse.rewrite(
@@ -21,7 +20,6 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Main domain — handle auth protection
   const supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
