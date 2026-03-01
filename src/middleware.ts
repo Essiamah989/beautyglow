@@ -7,8 +7,7 @@ export async function middleware(request: NextRequest) {
   const isMainDomain =
     hostname === 'beautyglow.tn' ||
     hostname === 'www.beautyglow.tn' ||
-    hostname === 'beautyglow-phi.vercel.app' ||
-    hostname === 'beautyglow-git-main-essiamah989s-projects.vercel.app' ||
+    hostname === 'beautyglow-nine.vercel.app' ||
     hostname.startsWith('localhost')
 
   if (!isMainDomain) {
@@ -50,5 +49,3 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico).*)']
 }
-// deployed Sun, Mar  1, 2026  9:27:13 PM
-// deployed Sun, Mar  1, 2026  9:29:56 PM
