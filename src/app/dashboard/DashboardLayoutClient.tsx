@@ -30,6 +30,9 @@ const navItems = [
   { href: "/dashboard/settings", label: "Paramètres", icon: "◉" },
 ];
 
+const domain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000'
+const protocol = domain === 'localhost:3000' ? 'http' : 'https'
+
 export default function DashboardLayoutClient({ business, children }: Props) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -361,7 +364,7 @@ export default function DashboardLayoutClient({ business, children }: Props) {
             <div className="sidebar-salon-name">{business.business_name}</div>
 
             <a
-              href={`http://${business.subdomain}.localhost:3000`}
+              href={`${protocol}://${business.subdomain}.${domain}`}
               target="_blank"
               className="sidebar-salon-link"
             >
