@@ -370,7 +370,7 @@ export default function DashboardLayoutClient({ business, children }: Props) {
               className="sidebar-salon-link"
             >
               {business.subdomain}.beautyglow.tn ↗
-            </a> console.log(`${protocol}://${business.subdomain}.${domain}`)
+            </a> 
           </div>
 
           <nav className="sidebar-nav">
@@ -418,7 +418,7 @@ export default function DashboardLayoutClient({ business, children }: Props) {
             </h1>
             <div className="topbar-actions">
               <a
-                href={`http://${business.subdomain}.localhost:3000`}
+                href={`${protocol}://${business.subdomain}.${domain}`}
                 target="_blank"
                 className="topbar-view-site"
               >
