@@ -1,7 +1,4 @@
 // src/app/sites/[subdomain]/SalonClient.tsx
-// Client component — handles all interactivity
-// Service popup with before/after carousel, testimonials, and booking form
-
 "use client";
 import "./lumiere.css";
 import { useState } from "react";
@@ -16,14 +13,12 @@ interface Service {
   duration_minutes: number;
   category: string;
 }
-
 interface Photo {
   id: string;
   url: string;
   category: string;
   is_featured: boolean;
 }
-
 interface Testimonial {
   id: string;
   service_id: string;
@@ -31,7 +26,6 @@ interface Testimonial {
   rating: number;
   comment: string;
 }
-
 interface BeforeAfter {
   id: string;
   service_id: string;
@@ -39,7 +33,6 @@ interface BeforeAfter {
   after_url: string;
   caption: string;
 }
-
 interface Business {
   id: string;
   business_name: string;
@@ -49,28 +42,42 @@ interface Business {
   description: string;
   logo_url: string;
   opening_hours: {
-    monday: { open: string; close: string; closed: boolean };
-    tuesday: { open: string; close: string; closed: boolean };
+    monday:    { open: string; close: string; closed: boolean };
+    tuesday:   { open: string; close: string; closed: boolean };
     wednesday: { open: string; close: string; closed: boolean };
-    thursday: { open: string; close: string; closed: boolean };
-    friday: { open: string; close: string; closed: boolean };
-    saturday: { open: string; close: string; closed: boolean };
-    sunday: { open: string; close: string; closed: boolean };
+    thursday:  { open: string; close: string; closed: boolean };
+    friday:    { open: string; close: string; closed: boolean };
+    saturday:  { open: string; close: string; closed: boolean };
+    sunday:    { open: string; close: string; closed: boolean };
   };
   social_links: {
     instagram: string;
-    facebook: string;
-    whatsapp: string;
+    facebook:  string;
+    whatsapp:  string;
   };
 }
-
 interface Props {
-  business: Business;
-  services: Service[];
-  photos: Photo[];
+  business:     Business;
+  services:     Service[];
+  photos:       Photo[];
   testimonials: Testimonial[];
   beforeAfters: BeforeAfter[];
 }
+
+const DAYS = [
+  { key: "monday",    label: "Lundi"     },
+  { key: "tuesday",   label: "Mardi"     },
+  { key: "wednesday", label: "Mercredi"  },
+  { key: "thursday",  label: "Jeudi"     },
+  { key: "friday",    label: "Vendredi"  },
+  { key: "saturday",  label: "Samedi"    },
+  { key: "sunday",    label: "Dimanche"  },
+];
+
+const TIME_SLOTS = [
+  "09:00","09:30","10:00","10:30","11:00","11:30","12:00",
+  "14:00","14:30","15:00","15:30","16:00","16:30","17:00","17:30",
+];
 
 export default function SalonClient({
   business,
@@ -80,37 +87,29 @@ export default function SalonClient({
   beforeAfters,
 }: Props) {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const [carouselIndex, setCarouselIndex] = useState(0);
-  const [bookingStep, setBookingStep] = useState<"info" | "form" | "success">(
-    "info",
-  );
-  const [customerName, setCustomerName] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [bookingDate, setBookingDate] = useState("");
-  const [bookingTime, setBookingTime] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  const [bookingStep, setBookingStep]         = useState<"info" | "form" | "success">("info");
+  const [customerName,  setCustomerName]      = useState("");
+  const [customerPhone, setCustomerPhone]     = useState("");
+  const [customerEmail, setCustomerEmail]     = useState("");
+  const [bookingDate,   setBookingDate]       = useState("");
+  const [bookingTime,   setBookingTime]       = useState("");
+  const [submitting,    setSubmitting]        = useState(false);
 
-  const featuredPhoto = photos?.find((p) => p.is_featured);
-
-  // Get data for selected service
+  const featuredPhoto      = photos?.find((p) => p.is_featured);
   const serviceBeforeAfters = selectedService
-    ? beforeAfters?.filter((b) => b.service_id === selectedService.id)
-    : [];
-
+    ? beforeAfters?.filter((b) => b.service_id === selectedService.id) : [];
   const serviceTestimonials = selectedService
-    ? testimonials?.filter((t) => t.service_id === selectedService.id)
-    : [];
+    ? testimonials?.filter((t) => t.service_id === selectedService.id) : [];
+
+  const todayKey = new Date()
+    .toLocaleDateString("en-US", { weekday: "long" })
+    .toLowerCase();
 
   const openService = (service: Service) => {
     setSelectedService(service);
-    setCarouselIndex(0);
     setBookingStep("info");
-    setCustomerName("");
-    setCustomerPhone("");
-    setCustomerEmail("");
-    setBookingDate("");
-    setBookingTime("");
+    setCustomerName(""); setCustomerPhone(""); setCustomerEmail("");
+    setBookingDate(""); setBookingTime("");
     document.body.style.overflow = "hidden";
   };
 
@@ -122,40 +121,31 @@ export default function SalonClient({
   const handleBooking = async () => {
     setSubmitting(true);
     try {
-      // Use Supabase directly instead of API route
-      // Avoids CORS issues with subdomain requests
       const { createClient } = await import("@supabase/supabase-js");
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       );
-
       const { error } = await supabase.from("bookings").insert({
-        business_id: business.id,
-        service_id: selectedService?.id,
-        customer_name: customerName,
+        business_id:    business.id,
+        service_id:     selectedService?.id,
+        customer_name:  customerName,
         customer_phone: customerPhone,
         customer_email: customerEmail || null,
-        booking_date: bookingDate,
-        booking_time: bookingTime,
-        status: "pending",
+        booking_date:   bookingDate,
+        booking_time:   bookingTime,
+        status:         "pending",
       });
-
-      // After successful booking insert, call notification API
-
-      // Then in handleBooking replace the entire fetch block with:
       sendBookingEmail({
-        business_id: business.id,
-        service_id: selectedService?.id || "",
-        customer_name: customerName,
+        business_id:    business.id,
+        service_id:     selectedService?.id || "",
+        customer_name:  customerName,
         customer_phone: customerPhone,
         customer_email: customerEmail || null,
-        booking_date: bookingDate,
-        booking_time: bookingTime,
+        booking_date:   bookingDate,
+        booking_time:   bookingTime,
       }).catch((err) => console.error("Email failed:", err));
-
       if (error) throw error;
-
       setBookingStep("success");
     } catch (error: any) {
       console.error("Booking failed:", error?.message);
@@ -165,36 +155,15 @@ export default function SalonClient({
     }
   };
 
-  // Available time slots
-  const timeSlots = [
-    "09:00",
-    "09:30",
-    "10:00",
-    "10:30",
-    "11:00",
-    "11:30",
-    "12:00",
-    "14:00",
-    "14:30",
-    "15:00",
-    "15:30",
-    "16:00",
-    "16:30",
-    "17:00",
-    "17:30",
-  ];
-
   return (
     <>
-      {/* NAV */}
+      {/* ── NAV ── */}
       <nav className="nav">
         <span className="nav-name">{business.business_name}</span>
-        <a href="#booking" className="nav-book">
-          Réserver
-        </a>
+        <a href="#booking" className="nav-book">Réserver</a>
       </nav>
 
-      {/* HERO */}
+      {/* ── HERO ── */}
       <div className="hero">
         {featuredPhoto && (
           <Image
@@ -221,14 +190,12 @@ export default function SalonClient({
           {business.description && (
             <p className="hero-description">{business.description}</p>
           )}
-          <a href="#services" className="hero-btn">
-            Découvrir nos services →
-          </a>
+          <a href="#services" className="hero-btn">Découvrir nos services →</a>
         </div>
         <div className="hero-scroll">Scroll</div>
       </div>
 
-      {/* STATS */}
+      {/* ── STATS ── */}
       <div className="stats-bar">
         <div className="stat">
           <span className="stat-number">500+</span>
@@ -248,7 +215,7 @@ export default function SalonClient({
         </div>
       </div>
 
-      {/* SERVICES */}
+      {/* ── SERVICES ── */}
       <div id="services" className="services-section">
         <div className="section-header">
           <div className="section-tag">Ce que nous offrons</div>
@@ -256,11 +223,7 @@ export default function SalonClient({
         </div>
         <div className="services-grid">
           {services?.map((service) => (
-            <div
-              key={service.id}
-              className="service-card"
-              onClick={() => openService(service)}
-            >
+            <div key={service.id} className="service-card" onClick={() => openService(service)}>
               <div className="service-category">{service.category}</div>
               <h3 className="service-name">{service.name}</h3>
               {service.description && (
@@ -272,9 +235,7 @@ export default function SalonClient({
                     {service.price}
                     <span className="service-price-unit">TND</span>
                   </div>
-                  <div className="service-duration">
-                    ⏱ {service.duration_minutes} min
-                  </div>
+                  <div className="service-duration">⏱ {service.duration_minutes} min</div>
                 </div>
                 <div className="service-cta">Voir détails →</div>
               </div>
@@ -283,7 +244,7 @@ export default function SalonClient({
         </div>
       </div>
 
-      {/* GALLERY */}
+      {/* ── GALLERY ── */}
       {photos && photos.length > 0 && (
         <div className="gallery-section">
           <div className="gallery-header">
@@ -305,67 +266,43 @@ export default function SalonClient({
           </div>
         </div>
       )}
-      {/* OPENING HOURS */}
+
+      {/* ── OPENING HOURS ── */}
       {business.opening_hours && (
         <div className="hours-section">
-          <div
-            style={{
-              maxWidth: "1100px",
-              margin: "0 auto",
-              textAlign: "center",
-            }}
-          >
-            <div className="section-tag" style={{ justifyContent: "center" }}>
-              Horaires
-            </div>
-            <h2 className="section-title">Nos Horaires d'Ouverture</h2>
-          </div>
+          <div className="section-tag">Horaires</div>
+          <h2 className="section-title">Nos Horaires d&apos;Ouverture</h2>
           <div className="hours-grid">
-            {[
-              { key: "monday", label: "Lundi" },
-              { key: "tuesday", label: "Mardi" },
-              { key: "wednesday", label: "Mercredi" },
-              { key: "thursday", label: "Jeudi" },
-              { key: "friday", label: "Vendredi" },
-              { key: "saturday", label: "Samedi" },
-              { key: "sunday", label: "Dimanche" },
-            ].map(({ key, label }) => {
-              const hours = business.opening_hours[key as keyof typeof business.opening_hours]
-              if (!hours) return null;
-              const todayKey = new Date()
-                .toLocaleDateString("en-US", { weekday: "long" })
-                .toLowerCase();
+            {DAYS.map(({ key, label }) => {
+              const h = business.opening_hours[key as keyof typeof business.opening_hours];
+              if (!h) return null;
               const isToday = key === todayKey;
               return (
                 <div key={key} className="hours-row">
-                  <span className={`hours-day ${isToday ? "today" : ""}`}>
+                  <span className={`hours-day${isToday ? " today" : ""}`}>
                     {isToday ? `▸ ${label}` : label}
                   </span>
-                  {hours.closed ? (
-                    <span className="hours-closed">Fermé</span>
-                  ) : (
-                    <span className="hours-time">
-                      {hours.open} — {hours.close}
-                    </span>
-                  )}
+                  {h.closed
+                    ? <span className="hours-closed">Fermé</span>
+                    : <span className="hours-time">{h.open} — {h.close}</span>
+                  }
                 </div>
               );
             })}
           </div>
         </div>
       )}
-      {/* TESTIMONIALS */}
+
+      {/* ── TESTIMONIALS ── */}
       {testimonials && testimonials.length > 0 && (
         <div className="testimonials-section">
-          <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
-            <div className="section-tag">Ce qu&apos;elles disent</div>
-            <h2 className="section-title">Témoignages</h2>
-          </div>
+          <div className="section-tag">Ce qu&apos;elles disent</div>
+          <h2 className="section-title">Témoignages</h2>
           <div className="testimonials-grid">
             {testimonials.slice(0, 6).map((t) => (
               <div key={t.id} className="testimonial-card">
                 <div className="testimonial-stars">★★★★★</div>
-                <p className="testimonial-comment">&ldquo;{t.comment}&ldquo;</p>
+                <p className="testimonial-comment">&ldquo;{t.comment}&rdquo;</p>
                 <div className="testimonial-name">— {t.customer_name}</div>
               </div>
             ))}
@@ -373,14 +310,11 @@ export default function SalonClient({
         </div>
       )}
 
-      {/* CONTACT */}
+      {/* ── CONTACT ── */}
       <div id="booking" className="contact-section">
-        <span className="section-tag" style={{ justifyContent: "center" }}>
-          Nous rendre visite
-        </span>
+        <span className="section-tag">Nous rendre visite</span>
         <h2 className="contact-title">Venez nous voir</h2>
         <p className="contact-sub">Nous serions ravies de vous accueillir</p>
-
         <div className="contact-grid">
           <div>
             <span className="contact-item-label">Adresse</span>
@@ -399,45 +333,29 @@ export default function SalonClient({
             </span>
           </div>
         </div>
-
         {business.social_links && (
           <div className="social-row">
             {business.social_links.instagram && (
-              <a
-                href={`https://instagram.com/${business.social_links.instagram}`}
-                target="_blank"
-                className="social-btn"
-              >
+              <a href={`https://instagram.com/${business.social_links.instagram}`} target="_blank" className="social-btn">
                 Instagram
               </a>
             )}
             {business.social_links.facebook && (
-              <a
-                href={business.social_links.facebook}
-                target="_blank"
-                className="social-btn"
-              >
+              <a href={business.social_links.facebook} target="_blank" className="social-btn">
                 Facebook
               </a>
             )}
             {business.social_links.whatsapp && (
-              <a
-                href={`https://wa.me/${business.social_links.whatsapp}`}
-                target="_blank"
-                className="social-btn"
-              >
+              <a href={`https://wa.me/${business.social_links.whatsapp}`} target="_blank" className="social-btn">
                 WhatsApp
               </a>
             )}
           </div>
         )}
-
-        <a href="#services" className="contact-btn">
-          Choisir un service
-        </a>
+        <a href="#services" className="contact-btn">Choisir un service</a>
       </div>
 
-      {/* FOOTER */}
+      {/* ── FOOTER ── */}
       <div className="footer">
         <span className="footer-name">{business.business_name}</span>
         <span className="footer-powered">
@@ -445,48 +363,42 @@ export default function SalonClient({
         </span>
       </div>
 
-      {/* SERVICE POPUP */}
+      {/* ── SERVICE POPUP ── */}
       {selectedService && (
         <div
           className="popup-overlay"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) closePopup();
-          }}
+          onClick={(e) => { if (e.target === e.currentTarget) closePopup(); }}
         >
           <div className="popup">
-            <button className="popup-close" onClick={closePopup}>
-              ✕
-            </button>
+            <button className="popup-close" onClick={closePopup}>✕</button>
 
-            {/* Popup Header */}
+            {/* Header */}
             <div className="popup-header">
               <div className="popup-category">{selectedService.category}</div>
               <h2 className="popup-title">{selectedService.name}</h2>
               <div className="popup-meta">
                 <span className="popup-price">{selectedService.price} TND</span>
-                <span className="popup-duration">
-                  ⏱ {selectedService.duration_minutes} min
-                </span>
+                <span className="popup-duration">⏱ {selectedService.duration_minutes} min</span>
               </div>
             </div>
 
             {/* Tabs */}
             <div className="popup-tabs">
               <button
-                className={`popup-tab ${bookingStep === "info" ? "active" : ""}`}
+                className={`popup-tab${bookingStep === "info" ? " active" : ""}`}
                 onClick={() => setBookingStep("info")}
               >
                 Avant / Après
               </button>
               <button
-                className={`popup-tab ${bookingStep === "form" ? "active" : ""}`}
+                className={`popup-tab${bookingStep === "form" ? " active" : ""}`}
                 onClick={() => setBookingStep("form")}
               >
                 Réserver
               </button>
             </div>
 
-            {/* Tab: Before/After + Testimonials */}
+            {/* Info tab */}
             {bookingStep === "info" && (
               <>
                 <div className="before-after-container">
@@ -496,136 +408,73 @@ export default function SalonClient({
                         <div className="ba-images">
                           <div className="ba-image-wrap">
                             <span className="ba-label">Avant</span>
-                            <Image
-                              src={ba.before_url}
-                              alt="Avant"
-                              fill
-                              style={{ objectFit: "cover" }}
-                            />
+                            <Image src={ba.before_url} alt="Avant" fill style={{ objectFit: "cover" }} />
                           </div>
                           <div className="ba-image-wrap">
                             <span className="ba-label">Après</span>
-                            <Image
-                              src={ba.after_url}
-                              alt="Après"
-                              fill
-                              style={{ objectFit: "cover" }}
-                            />
+                            <Image src={ba.after_url} alt="Après" fill style={{ objectFit: "cover" }} />
                           </div>
                         </div>
-                        {ba.caption && (
-                          <p className="ba-caption">{ba.caption}</p>
-                        )}
+                        {ba.caption && <p className="ba-caption">{ba.caption}</p>}
                       </div>
                     ))
                   ) : (
-                    <p
-                      style={{
-                        color: "#333",
-                        fontSize: "0.85rem",
-                        textAlign: "center",
-                        padding: "24px 0",
-                      }}
-                    >
-                      Photos avant/après bientôt disponibles
-                    </p>
+                    <p className="ba-empty">Photos avant/après bientôt disponibles</p>
                   )}
                 </div>
 
-                {/* Testimonials */}
                 {serviceTestimonials.length > 0 && (
                   <div className="popup-testimonials">
-                    <div
-                      className="section-tag"
-                      style={{ marginBottom: "16px" }}
-                    >
-                      Avis clientes
-                    </div>
+                    <div className="section-tag">Avis clientes</div>
                     {serviceTestimonials.map((t) => (
                       <div key={t.id} className="popup-testimonial">
-                        <div
-                          className="testimonial-stars"
-                          style={{ marginBottom: "8px" }}
-                        >
-                          ★★★★★
-                        </div>
-                        <p className="testimonial-comment">
-                          &ldquo;{t.comment}&ldquo;
-                        </p>
-                        <div
-                          className="testimonial-name"
-                          style={{ marginTop: "10px" }}
-                        >
-                          — {t.customer_name}
-                        </div>
+                        <div className="testimonial-stars">★★★★★</div>
+                        <p className="testimonial-comment">&ldquo;{t.comment}&rdquo;</p>
+                        <div className="testimonial-name">— {t.customer_name}</div>
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* CTA to booking tab */}
-                <div style={{ padding: "0 40px 40px" }}>
-                  <button
-                    className="submit-btn"
-                    onClick={() => setBookingStep("form")}
-                  >
+                <div className="booking-form">
+                  <button className="submit-btn" onClick={() => setBookingStep("form")}>
                     Réserver ce service →
                   </button>
                 </div>
               </>
             )}
 
-            {/* Tab: Booking Form */}
+            {/* Booking form tab */}
             {bookingStep === "form" && (
               <div className="booking-form">
                 <div className="form-group">
                   <label className="form-label">Votre nom *</label>
-                  <input
-                    className="form-input"
-                    placeholder="Nom et prénom"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                  />
+                  <input className="form-input" placeholder="Nom et prénom"
+                    value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Téléphone *</label>
-                  <input
-                    className="form-input"
-                    placeholder="+216 XX XXX XXX"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                  />
+                  <input className="form-input" placeholder="+216 XX XXX XXX"
+                    value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Email (optionnel)</label>
-                  <input
-                    className="form-input"
-                    placeholder="votre@email.com"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                  />
+                  <input className="form-input" placeholder="votre@email.com"
+                    value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Date souhaitée *</label>
-                  <input
-                    className="form-input"
-                    type="date"
-                    value={bookingDate}
-                    min={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => setBookingDate(e.target.value)}
-                  />
+                  <input className="form-input" type="date"
+                    value={bookingDate} min={new Date().toISOString().split("T")[0]}
+                    onChange={(e) => setBookingDate(e.target.value)} />
                 </div>
-
                 <div className="form-group">
                   <label className="form-label">Heure souhaitée *</label>
                   <div className="time-slots">
-                    {timeSlots.map((time) => (
+                    {TIME_SLOTS.map((time) => (
                       <div
                         key={time}
-                        className={`time-slot ${bookingTime === time ? "selected" : ""}`}
+                        className={`time-slot${bookingTime === time ? " selected" : ""}`}
                         onClick={() => setBookingTime(time)}
                       >
                         {time}
@@ -633,49 +482,29 @@ export default function SalonClient({
                     ))}
                   </div>
                 </div>
-
                 <button
                   className="submit-btn"
-                  disabled={
-                    !customerName ||
-                    !customerPhone ||
-                    !bookingDate ||
-                    !bookingTime ||
-                    submitting
-                  }
+                  disabled={!customerName || !customerPhone || !bookingDate || !bookingTime || submitting}
                   onClick={handleBooking}
                 >
-                  {submitting
-                    ? "Envoi en cours..."
-                    : "Confirmer la réservation →"}
+                  {submitting ? "Envoi en cours..." : "Confirmer la réservation →"}
                 </button>
               </div>
             )}
 
-            {/* Success State */}
+            {/* Success */}
             {bookingStep === "success" && (
               <div className="success-state">
                 <span className="success-icon">✦</span>
                 <h3 className="success-title">Réservation confirmée!</h3>
                 <p className="success-sub">
-                  Merci {customerName}! Votre demande de réservation pour
-                  <br />
-                  <strong style={{ color: "#c9a96e" }}>
-                    {selectedService.name}
-                  </strong>
-                  <br />
-                  le {bookingDate} à {bookingTime} a été envoyée.
-                  <br />
-                  <br />
+                  Merci {customerName}! Votre demande de réservation pour{" "}
+                  <strong>{selectedService.name}</strong>
+                  {" "}le {bookingDate} à {bookingTime} a été envoyée.
+                  <br /><br />
                   Le salon vous contactera sous peu pour confirmer.
                 </p>
-                <button
-                  className="submit-btn"
-                  style={{ marginTop: "32px" }}
-                  onClick={closePopup}
-                >
-                  Fermer
-                </button>
+                <button className="submit-btn" onClick={closePopup}>Fermer</button>
               </div>
             )}
           </div>

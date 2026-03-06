@@ -1,499 +1,204 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
+import '@/styles/auth.css'
 
+/* ── Icons ── */
+const IconEye = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+  </svg>
+)
+const IconEyeOff = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+    <line x1="1" y1="1" x2="23" y2="23"/>
+  </svg>
+)
+const IconArrowRight = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+  </svg>
+)
+const IconCheck = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+)
+const IconStarFilled = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+  </svg>
+)
+const IconShield = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+)
+const IconZap = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+  </svg>
+)
+const IconLogoMark = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EA4492" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>
+  </svg>
+)
+const IconAlert = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+  </svg>
+)
+
+const PERKS = [
+  '14 jours gratuits, sans carte bancaire',
+  'Site professionnel en 5 minutes',
+  'Réservation en ligne 24h/24',
+  'Dashboard complet inclus',
+  'Support en français inclus',
+]
+
+/* ── Component ── */
 export default function SignupPage() {
   const router = useRouter()
+  const [salonName, setSalonName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   const handleSignup = async () => {
+    if (!email || !password || !salonName) { setError('Veuillez remplir tous les champs.'); return }
+    if (password.length < 6) { setError('Le mot de passe doit contenir au moins 6 caractères.'); return }
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { error } = await supabase.auth.signUp({
+      email, password,
+      options: { data: { salon_name: salonName } }
+    })
     if (error) { setError(error.message); setLoading(false); return }
     router.push('/onboarding')
   }
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+    <div className="auth-page">
 
-        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+      {/* ── LEFT PANEL ── */}
+      <div className="auth-left">
+        <div className="left-top">
 
-        :root {
-          --pink: #F4A7B9;
-          --pink-deep: #E8799A;
-          --pink-soft: #FEF1F5;
-          --pink-mid: #FADDEA;
-          --slate: #4A5568;
-          --slate-dark: #2D3748;
-          --slate-light: #718096;
-          --cream: #FAF7F5;
-          --cream-dark: #F3EDE8;
-          --white: #FFFFFF;
-          --text: #2D3748;
-          --text-light: #718096;
-        }
-
-        body {
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          background: var(--cream);
-          color: var(--text);
-          -webkit-font-smoothing: antialiased;
-          min-height: 100vh;
-        }
-
-        .auth-page {
-          min-height: 100vh;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-        }
-
-        /* LEFT PANEL */
-        .auth-left {
-          background: var(--slate-dark);
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          padding: 48px;
-          position: relative;
-          overflow: hidden;
-        }
-
-        .auth-left::before {
-          content: '';
-          position: absolute;
-          width: 500px;
-          height: 500px;
-          background: radial-gradient(circle, rgba(244,167,185,0.15) 0%, transparent 65%);
-          bottom: -150px;
-          right: -100px;
-          pointer-events: none;
-        }
-
-        .auth-left::after {
-          content: '';
-          position: absolute;
-          width: 300px;
-          height: 300px;
-          background: radial-gradient(circle, rgba(244,167,185,0.08) 0%, transparent 65%);
-          top: -80px;
-          left: -60px;
-          pointer-events: none;
-        }
-
-        .left-logo {
-          font-family: 'Playfair Display', serif;
-          font-size: 1.5rem;
-          font-weight: 700;
-          color: white;
-          cursor: pointer;
-          position: relative;
-          z-index: 1;
-        }
-
-        .left-logo span { color: var(--pink); }
-
-        .left-content {
-          position: relative;
-          z-index: 1;
-        }
-
-        .left-tag {
-          display: inline-block;
-          background: rgba(244,167,185,0.15);
-          border: 1px solid rgba(244,167,185,0.25);
-          color: var(--pink);
-          font-size: 0.68rem;
-          font-weight: 700;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          padding: 6px 14px;
-          border-radius: 50px;
-          margin-bottom: 24px;
-        }
-
-        .left-title {
-          font-family: 'Playfair Display', serif;
-          font-size: clamp(2rem, 3vw, 2.8rem);
-          font-weight: 900;
-          color: white;
-          line-height: 1.1;
-          letter-spacing: -1px;
-          margin-bottom: 20px;
-        }
-
-        .left-title em {
-          font-style: italic;
-          color: var(--pink);
-        }
-
-        .left-desc {
-          font-size: 0.92rem;
-          color: rgba(255,255,255,0.5);
-          line-height: 1.75;
-          font-weight: 300;
-          max-width: 320px;
-          margin-bottom: 40px;
-        }
-
-        .left-perks {
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-        }
-
-        .perk-row {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-        }
-
-        .perk-dot {
-          width: 28px;
-          height: 28px;
-          background: rgba(244,167,185,0.15);
-          border: 1px solid rgba(244,167,185,0.2);
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.7rem;
-          color: var(--pink);
-          flex-shrink: 0;
-        }
-
-        .perk-text {
-          font-size: 0.85rem;
-          color: rgba(255,255,255,0.6);
-          font-weight: 400;
-        }
-
-        .left-bottom {
-          position: relative;
-          z-index: 1;
-        }
-
-        .left-testimonial {
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 16px;
-          padding: 20px 24px;
-        }
-
-        .testi-text {
-          font-family: 'Playfair Display', serif;
-          font-size: 0.9rem;
-          font-style: italic;
-          color: rgba(255,255,255,0.75);
-          line-height: 1.7;
-          margin-bottom: 14px;
-        }
-
-        .testi-author-row {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .testi-av {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, var(--pink-mid), var(--pink));
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.78rem;
-          font-weight: 700;
-          color: white;
-          flex-shrink: 0;
-        }
-
-        .testi-info-name {
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: white;
-        }
-
-        .testi-info-salon {
-          font-size: 0.7rem;
-          color: var(--pink);
-        }
-
-        /* RIGHT PANEL */
-        .auth-right {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 48px;
-          background: var(--cream);
-        }
-
-        .auth-form-wrap {
-          width: 100%;
-          max-width: 400px;
-        }
-
-        .form-eyebrow {
-          font-size: 0.68rem;
-          font-weight: 700;
-          letter-spacing: 2.5px;
-          text-transform: uppercase;
-          color: var(--pink-deep);
-          margin-bottom: 10px;
-          display: block;
-        }
-
-        .form-title {
-          font-family: 'Playfair Display', serif;
-          font-size: 2rem;
-          font-weight: 900;
-          color: var(--slate-dark);
-          letter-spacing: -0.8px;
-          line-height: 1.1;
-          margin-bottom: 8px;
-        }
-
-        .form-title em {
-          font-style: italic;
-          color: var(--pink-deep);
-        }
-
-        .form-sub {
-          font-size: 0.88rem;
-          color: var(--text-light);
-          font-weight: 400;
-          margin-bottom: 36px;
-          line-height: 1.6;
-        }
-
-        .field-group {
-          margin-bottom: 18px;
-        }
-
-        .field-label {
-          font-size: 0.72rem;
-          font-weight: 600;
-          letter-spacing: 1px;
-          text-transform: uppercase;
-          color: var(--slate);
-          display: block;
-          margin-bottom: 8px;
-        }
-
-        .field-input {
-          width: 100%;
-          background: white;
-          border: 1.5px solid var(--cream-dark);
-          color: var(--slate-dark);
-          padding: 14px 18px;
-          font-size: 0.92rem;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-weight: 400;
-          outline: none;
-          transition: all 0.2s;
-          border-radius: 12px;
-        }
-
-        .field-input:focus {
-          border-color: var(--pink);
-          box-shadow: 0 0 0 4px rgba(244,167,185,0.12);
-        }
-
-        .field-input::placeholder { color: #CBD5E0; }
-
-        .error-box {
-          background: #FFF5F5;
-          border: 1px solid #FED7D7;
-          color: #C53030;
-          padding: 12px 16px;
-          font-size: 0.82rem;
-          border-radius: 10px;
-          margin-bottom: 18px;
-          font-weight: 400;
-        }
-
-        .btn-submit {
-          width: 100%;
-          font-family: 'Plus Jakarta Sans', sans-serif;
-          font-size: 0.95rem;
-          font-weight: 700;
-          color: white;
-          background: var(--slate-dark);
-          border: none;
-          cursor: pointer;
-          padding: 15px;
-          border-radius: 50px;
-          transition: all 0.25s;
-          letter-spacing: -0.2px;
-          margin-top: 8px;
-          box-shadow: 0 4px 20px rgba(45,55,72,0.2);
-        }
-
-        .btn-submit:hover:not(:disabled) {
-          background: var(--pink-deep);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 28px rgba(232,121,154,0.35);
-        }
-
-        .btn-submit:disabled {
-          opacity: 0.6;
-          cursor: not-allowed;
-        }
-
-        .form-divider {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          margin: 24px 0;
-        }
-
-        .divider-line {
-          flex: 1;
-          height: 1px;
-          background: var(--cream-dark);
-        }
-
-        .divider-text {
-          font-size: 0.75rem;
-          color: var(--text-light);
-          font-weight: 400;
-          white-space: nowrap;
-        }
-
-        .form-footer {
-          text-align: center;
-          font-size: 0.84rem;
-          color: var(--text-light);
-          font-weight: 400;
-        }
-
-        .form-footer a {
-          color: var(--pink-deep);
-          font-weight: 600;
-          text-decoration: none;
-          transition: color 0.2s;
-        }
-
-        .form-footer a:hover { color: var(--slate-dark); }
-
-        .trial-badge {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          background: var(--pink-soft);
-          border: 1px solid var(--pink-mid);
-          border-radius: 50px;
-          padding: 10px 20px;
-          margin-bottom: 28px;
-        }
-
-        .trial-badge-text {
-          font-size: 0.78rem;
-          font-weight: 600;
-          color: var(--pink-deep);
-        }
-
-        .trial-badge-dot {
-          width: 6px;
-          height: 6px;
-          background: var(--pink);
-          border-radius: 50%;
-          animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.4); }
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-          .auth-page { grid-template-columns: 1fr; }
-          .auth-left { display: none; }
-          .auth-right { padding: 40px 24px; align-items: flex-start; padding-top: 60px; }
-        }
-      `}</style>
-
-      <div className="auth-page">
-        {/* LEFT */}
-        <div className="auth-left">
           <div className="left-logo" onClick={() => router.push('/')}>
-            Beauty<span>Glow</span>.tn
+            <div className="left-logo-mark"><IconLogoMark /></div>
+            <div className="left-logo-text">Beauty<span>Glow</span>.tn</div>
           </div>
 
-          <div className="left-content">
-            <div className="left-tag">✦ Rejoignez-nous</div>
-            <h2 className="left-title">
-              Votre salon,<br />
-              <em>enfin en ligne</em><br />
-              et rentable.
-            </h2>
-            <p className="left-desc">
-              Des centaines de salons tunisiens font confiance à BeautyGlow
-              pour gérer leurs réservations en ligne.
-            </p>
-            <div className="left-perks">
-              {[
-                '14 jours gratuits — aucune carte requise',
-                'Configuration en moins de 5 minutes',
-                'Support en français inclus',
-                'Annulez quand vous voulez',
-              ].map((p, i) => (
-                <div key={i} className="perk-row">
-                  <div className="perk-dot">✓</div>
-                  <span className="perk-text">{p}</span>
-                </div>
-              ))}
+          <div className="trial-badge">
+            <div className="trial-dot" />
+            <span className="trial-badge-text">14 jours gratuits · Aucune carte requise</span>
+          </div>
+
+          <div className="left-eyebrow">
+            <div className="left-eyebrow-line" />
+            <span className="left-eyebrow-text">Rejoindre BeautyGlow</span>
+          </div>
+
+          <h2 className="left-title">
+            Votre salon en<br />ligne en <em>5 minutes</em>
+          </h2>
+
+          <p className="left-desc">
+            Rejoignez les salons tunisiens qui ont choisi de briller en ligne.
+          </p>
+
+          <div className="perks-list">
+            {PERKS.map((p, i) => (
+              <div key={i} className="perk">
+                <div className="perk-icon"><IconCheck /></div>
+                <span className="perk-text">{p}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="left-bottom">
+          <div className="review-block">
+            <div className="review-stars">
+              {[...Array(5)].map((_, i) => <IconStarFilled key={i} />)}
             </div>
-          </div>
-
-          <div className="left-bottom">
-            <div className="left-testimonial">
-              <p className="testi-text">
-                &ldquo;Mes réservations ont augmenté de 40% dès le premier mois.
-                Je ne peux plus m&apos;en passer !&rdquo;
-              </p>
-              <div className="testi-author-row">
-                <div className="testi-av">Y</div>
-                <div>
-                  <div className="testi-info-name">Yasmine B.</div>
-                  <div className="testi-info-salon">Salon Yasmine, Tunis</div>
-                </div>
+            <p className="review-text">
+              &#x201C;Mes réservations ont augmenté de 40% dès le premier mois. BeautyGlow a changé mon salon.&#x201D;
+            </p>
+            <div className="review-author">
+              <div className="review-av">A</div>
+              <div>
+                <div className="review-name">Amira K.</div>
+                <div className="review-salon">Beauty Amira, Sousse</div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* RIGHT */}
-        <div className="auth-right">
-          <div className="auth-form-wrap">
-            <div className="trial-badge">
-              <div className="trial-badge-dot" />
-              <span className="trial-badge-text">14 jours gratuits — Aucune carte bancaire</span>
+      {/* ── RIGHT PANEL ── */}
+      <div className="auth-right">
+        <div className="form-wrap">
+
+          <button className="form-back" onClick={() => router.push('/')}>
+            <IconArrowRight /> Retour à l&apos;accueil
+          </button>
+
+          <div className="form-eyebrow">
+            <div className="form-eyebrow-line" />
+            <span className="form-eyebrow-text">Inscription</span>
+          </div>
+
+          <h1 className="form-title">
+            Commencez<br /><em>gratuitement</em>
+          </h1>
+
+          <p className="form-sub">
+            Créez votre compte et lancez votre salon en ligne aujourd&apos;hui.
+          </p>
+
+          <div className="free-badge">
+            <IconZap />
+            <span>14 jours gratuits — Aucune carte bancaire</span>
+          </div>
+
+          {error && (
+            <div className="error-msg">
+              <IconAlert /> {error}
             </div>
+          )}
 
-            <span className="form-eyebrow">Créer un compte</span>
-            <h1 className="form-title">
-              Commencez<br /><em>gratuitement</em>
-            </h1>
-            <p className="form-sub">
-              Votre salon en ligne en 5 minutes chrono.
-            </p>
-
-            {error && <div className="error-box">⚠ {error}</div>}
-
-            <div className="field-group">
-              <label className="field-label">Adresse email</label>
+          <div className="field">
+            <label className="field-label" htmlFor="signup-salon">Nom du salon</label>
+            <div className="field-wrap">
               <input
+                id="signup-salon"
+                className="field-input"
+                type="text"
+                placeholder="Ex: Salon Yasmine"
+                value={salonName}
+                onChange={e => setSalonName(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="field">
+            <label className="field-label" htmlFor="signup-email">Adresse email</label>
+            <div className="field-wrap">
+              <input
+                id="signup-email"
                 className="field-input"
                 type="email"
                 placeholder="votre@email.com"
@@ -501,39 +206,52 @@ export default function SignupPage() {
                 onChange={e => setEmail(e.target.value)}
               />
             </div>
+          </div>
 
-            <div className="field-group">
-              <label className="field-label">Mot de passe</label>
+          <div className="field">
+            <label className="field-label" htmlFor="signup-password">Mot de passe</label>
+            <div className="field-wrap">
               <input
-                className="field-input"
-                type="password"
-                placeholder="8 caractères minimum"
+                id="signup-password"
+                className="field-input has-icon"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Au moins 6 caractères"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSignup()}
               />
+              <button className="field-icon" onClick={() => setShowPassword(!showPassword)} aria-label="Afficher/masquer le mot de passe">
+                {showPassword ? <IconEyeOff /> : <IconEye />}
+              </button>
             </div>
-
-            <button
-              className="btn-submit"
-              onClick={handleSignup}
-              disabled={loading}
-            >
-              {loading ? 'Création en cours...' : 'Créer mon compte gratuit →'}
-            </button>
-
-            <div className="form-divider">
-              <div className="divider-line" />
-              <span className="divider-text">Déjà inscrite ?</span>
-              <div className="divider-line" />
-            </div>
-
-            <p className="form-footer">
-              <a href="/auth/login">Se connecter à mon compte →</a>
-            </p>
           </div>
+
+          <button className="btn-submit" onClick={handleSignup} disabled={loading}>
+            {loading ? (
+              <><div className="spinner" /> Création du compte...</>
+            ) : (
+              <>Créer mon compte gratuit <span className="btn-arrow"><IconArrowRight /></span></>
+            )}
+          </button>
+
+          <div className="form-trust">
+            <div className="trust-item"><IconShield /><span>Données sécurisées</span></div>
+            <div className="trust-item"><IconZap /><span>Pas d&apos;engagement</span></div>
+            <div className="trust-item"><IconCheck /><span>Annulez à tout moment</span></div>
+          </div>
+
+          <div className="divider">
+            <div className="divider-line" />
+            <span className="divider-text">Déjà un compte ?</span>
+            <div className="divider-line" />
+          </div>
+
+          <p className="form-footer">
+            <a href="/auth/login">Se connecter →</a>
+          </p>
+
         </div>
       </div>
-    </>
+    </div>
   )
 }
