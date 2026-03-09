@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 import "@/styles/dashboard.css";
 
 interface Business {
@@ -36,7 +36,11 @@ export default function DashboardLayoutClient({ business, children }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = async () => {
-    const supabase = createClient(
+    // Must use createBrowserClient (@supabase/ssr) — it manages the
+    // auth cookie that Next.js middleware reads. The raw createClient
+    // from @supabase/supabase-js only clears in-memory state, leaving
+    // the cookie intact so middleware keeps redirecting to the dashboard.
+    const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
@@ -51,6 +55,11 @@ export default function DashboardLayoutClient({ business, children }: Props) {
         : pathname.startsWith(item.href)
     )?.label || "Dashboard";
 
+  const planLabel =
+    business.plan_type === "trial" ? "⏳ Période d'essai"
+    : business.plan_type === "pro" ? "★ Plan Pro"
+    : "● Plan Basic";
+
   return (
     <div className="dashboard-wrapper">
 
@@ -59,14 +68,10 @@ export default function DashboardLayoutClient({ business, children }: Props) {
 
         <div className="sidebar-logo">
           <Link href="/dashboard" className="sidebar-brand">
-            BeautyGlow
+            Beauty<span>Glow</span>.tn
           </Link>
           <span className={`sidebar-plan ${business.plan_type}`}>
-            {business.plan_type === "trial"
-              ? "⏳ Période d'essai"
-              : business.plan_type === "pro"
-              ? "★ Plan Pro"
-              : "● Plan Basic"}
+            {planLabel}
           </span>
         </div>
 
@@ -131,7 +136,9 @@ export default function DashboardLayoutClient({ business, children }: Props) {
           </div>
         </div>
 
-        <div className="dashboard-content">{children}</div>
+        <div className="dashboard-content">
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { useRouter } from 'next/navigation'
 import '@/styles/auth.css'
@@ -70,6 +71,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [signupSuccess, setSignupSuccess] = useState(false)
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    if (searchParams.get('signup') === 'success') {
+      setSignupSuccess(true)
+    }
+  }, [searchParams])
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -157,6 +166,12 @@ export default function LoginPage() {
           <p className="form-sub">
             Entrez vos identifiants pour accéder à votre espace.
           </p>
+
+          {signupSuccess && (
+            <div className="success-msg">
+              ✓ Compte créé avec succès ! Connectez-vous pour continuer.
+            </div>
+          )}
 
           {error && (
             <div className="error-msg">

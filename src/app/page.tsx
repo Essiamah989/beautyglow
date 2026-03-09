@@ -265,8 +265,8 @@ const STRIP = [
 
 // FIXED: prices match 00-MASTER-PROJECT-DOCUMENTATION.md (69/129 TND)
 const PRICING = [
-  { tier:'Basic', price:'69',  badge:null,        feats:['Site web professionnel','Réservation en ligne','Dashboard complet','Galerie photos','Notifications email','Support standard'] },
-  { tier:'Pro',   price:'129', badge:'Populaire', feats:['Tout le plan Basic','Domaine personnalisé','Campagnes email','Statistiques avancées','Support prioritaire','Multi-staff (bientôt)'] },
+  { tier:'Basic', price:'89',  badge:null,        feats:['Site web professionnel','Réservation en ligne','Dashboard complet','Galerie photos','Notifications email','Support standard'] },
+  { tier:'Pro',   price:'149', badge:'Populaire', feats:['Tout le plan Basic','Domaine personnalisé','Campagnes email','Statistiques avancées','Support prioritaire','Multi-staff (bientôt)'] },
 ]
 
 /* ══════════════════════════════════════════
@@ -357,7 +357,7 @@ export default function LandingPage() {
         @media(max-width:580px){ .sec { padding:52px 5%; } }
 
         /* ── Problem cards ── */
-        .problem-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; }
+        .problem-grid { display:grid; grid-template-columns:repeat(4,minmax(0,240px)); gap:28px; justify-content:center; }
         @media(max-width:1000px){ .problem-grid { grid-template-columns:repeat(2,1fr); } }
         @media(max-width:540px)  { .problem-grid { grid-template-columns:1fr; max-width:400px; margin:0 auto; } }
 
@@ -591,11 +591,11 @@ export default function LandingPage() {
             ].map((p,i) => (
               <div key={i} className="prob-card"
                 style={{ background:'white', borderRadius:20, overflow:'hidden', boxShadow:'0 8px 32px rgba(4,27,45,.28)', transition:'transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s', cursor:'default', display:'flex', flexDirection:'column' }}>
-                <div style={{ position:'relative', height:148, background:'linear-gradient(150deg,#EA4492 0%,#F4507A 50%,#FF7A5C 100%)', overflow:'hidden', flexShrink:0 }}>
-                  <div style={{ position:'absolute', bottom:-30, left:-22, width:155, height:155, background:'rgba(255,200,180,0.18)', borderRadius:'50%', pointerEvents:'none' }}/>
-                  <div style={{ position:'absolute', top:-18, right:-18, width:98, height:98,  background:'rgba(255,255,255,0.06)',   borderRadius:'50%', pointerEvents:'none' }}/>
-                  <div style={{ position:'absolute', top:12, right:16, fontFamily:'Playfair Display,serif', fontSize:'4.5rem', fontWeight:900, lineHeight:1, color:'rgba(255,255,255,0.13)', letterSpacing:'-2px', userSelect:'none' }}>{p.n}</div>
-                  <div style={{ position:'absolute', bottom:18, left:20, width:44, height:44, borderRadius:12, background:'rgba(255,255,255,0.18)', backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', color:'white' }}>{p.icon}</div>
+                <div style={{ position:'relative', height:88, background:'linear-gradient(150deg,#EA4492 0%,#F4507A 50%,#FF7A5C 100%)', overflow:'hidden', flexShrink:0 }}>
+                  <div style={{ position:'absolute', bottom:-20, left:-16, width:100, height:100, background:'rgba(255,200,180,0.18)', borderRadius:'50%', pointerEvents:'none' }}/>
+                  <div style={{ position:'absolute', top:-14, right:-14, width:70, height:70, background:'rgba(255,255,255,0.06)', borderRadius:'50%', pointerEvents:'none' }}/>
+                  <div style={{ position:'absolute', top:6, right:14, fontFamily:'Playfair Display,serif', fontSize:'3.5rem', fontWeight:900, lineHeight:1, color:'rgba(255,255,255,0.13)', letterSpacing:'-2px', userSelect:'none' }}>{p.n}</div>
+                  <div style={{ position:'absolute', bottom:14, left:18, width:38, height:38, borderRadius:12, background:'rgba(255,255,255,0.18)', backdropFilter:'blur(8px)', WebkitBackdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', color:'white' }}>{p.icon}</div>
                 </div>
                 <div style={{ padding:'20px 20px 24px', flex:1, display:'flex', flexDirection:'column', gap:8 }}>
                   <div style={{ fontFamily:'Playfair Display,serif', fontSize:'0.97rem', fontWeight:700, color:C.ink, lineHeight:1.3 }}>{p.title}</div>
@@ -712,7 +712,7 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════
-          PRICING  (69 TND / 129 TND — per docs)
+          PRICING  (89 TND / 149 TND — per docs)
       ══════════════════════════════════════ */}
       <section id="pricing" className="sec" style={{ background:C.navy1 }}>
         <div style={{ textAlign:'center' }}>

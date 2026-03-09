@@ -43,7 +43,7 @@ export default async function DashboardPage() {
 
   const { data: monthBookings } = await supabase
     .from('bookings')
-    .select('*')
+    .select('*, services(price)')
     .eq('business_id', business.id)
     .gte('booking_date', monthStart)
 
@@ -62,9 +62,10 @@ export default async function DashboardPage() {
     .order('booking_date', { ascending: true })
     .limit(5)
 
+  // Revenue = only completed bookings (money actually received)
   const monthRevenue = monthBookings?.reduce((sum, b) =>
-    b.status !== 'cancelled' ? sum + (b.services?.price || 0) : sum
-  , 0) || 0
+    b.status === 'completed' ? sum + (b.services?.price ?? 0) : sum
+  , 0) ?? 0
 
   return (
     <>
@@ -100,7 +101,9 @@ export default async function DashboardPage() {
           <div className="stat-card-value">
             {monthRevenue}<span> TND</span>
           </div>
-          <div className="stat-card-sub">ce mois</div>
+          <div className="stat-card-sub">
+            {monthBookings?.filter(b => b.status === 'completed').length || 0} terminées ce mois
+          </div>
         </div>
         <div className="stat-card">
           <span className="stat-card-label">Clients total</span>

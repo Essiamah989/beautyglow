@@ -1,6 +1,6 @@
 // src/app/sites/[subdomain]/SalonClient.tsx
 "use client";
-import "./lumiere.css";
+import "./azur.css";
 import { useState } from "react";
 import Image from "next/image";
 import { sendBookingEmail } from "@/app/actions/sendBookingEmail";

@@ -81,12 +81,26 @@ export default function SignupPage() {
     if (password.length < 6) { setError('Le mot de passe doit contenir au moins 6 caractères.'); return }
     setLoading(true)
     setError('')
-    const { error } = await supabase.auth.signUp({
+
+    // Sign out any existing session first — prevents the old account's
+    // cookie from persisting and hijacking the redirect after signup
+    await supabase.auth.signOut()
+
+    const { data, error } = await supabase.auth.signUp({
       email, password,
       options: { data: { salon_name: salonName } }
     })
     if (error) { setError(error.message); setLoading(false); return }
-    router.push('/onboarding')
+
+    // If Supabase requires email confirmation, session will be null
+    // Redirect to login either way so the user starts a clean session
+    if (data.session) {
+      // Immediately signed in — go straight to onboarding
+      router.push('/onboarding')
+    } else {
+      // Email confirmation required — tell them to check their inbox
+      router.push('/auth/login?signup=success')
+    }
   }
 
   return (
