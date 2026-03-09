@@ -75,7 +75,8 @@ function LoginPageInner() {
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    if (searchParams.get('signup') === 'success') {
+    const signup = searchParams.get('signup')
+    if (signup === 'success' || signup === 'confirm') {
       setSignupSuccess(true)
     }
   }, [searchParams])
@@ -169,7 +170,10 @@ function LoginPageInner() {
 
           {signupSuccess && (
             <div className="success-msg">
-              ✓ Compte créé avec succès ! Connectez-vous pour continuer.
+              {searchParams.get('signup') === 'confirm'
+                ? '📧 Compte créé ! Vérifiez votre email pour confirmer, puis connectez-vous.'
+                : '✓ Compte créé avec succès ! Connectez-vous pour continuer.'
+              }
             </div>
           )}
 

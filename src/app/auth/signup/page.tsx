@@ -92,14 +92,19 @@ export default function SignupPage() {
     })
     if (error) { setError(error.message); setLoading(false); return }
 
-    // If Supabase requires email confirmation, session will be null
-    // Redirect to login either way so the user starts a clean session
     if (data.session) {
-      // Immediately signed in — go straight to onboarding
+      // Already have a session (email confirmation disabled) — go to onboarding
       router.push('/onboarding')
-    } else {
-      // Email confirmation required — tell them to check their inbox
-      router.push('/auth/login?signup=success')
+    } else if (data.user && !data.session) {
+      // No session yet — try signing in immediately
+      // Works when "Confirm email" is OFF in Supabase dashboard
+      const { data: signInData } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInData.session) {
+        router.push('/onboarding')
+      } else {
+        // Email confirmation truly required — tell user to check inbox
+        router.push('/auth/login?signup=confirm')
+      }
     }
   }
 
