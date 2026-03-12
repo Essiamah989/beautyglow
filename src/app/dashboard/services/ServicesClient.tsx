@@ -18,6 +18,7 @@ interface Service {
 interface Props {
   services: Service[]
   businessId: string
+  planType: string
 }
 
 const supabase = createBrowserClient(
@@ -38,7 +39,7 @@ const emptyForm = {
   category: 'haircut',
 }
 
-export default function ServicesClient({ services: initial, businessId }: Props) {
+export default function ServicesClient({ services: initial, businessId, planType }: Props) {
   const [services, setServices]   = useState<Service[]>(initial)
   const [showForm, setShowForm]   = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -46,7 +47,14 @@ export default function ServicesClient({ services: initial, businessId }: Props)
   const [loading, setLoading]     = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
+  const serviceLimit = planType === 'basic' || planType === 'trial' ? 10 : planType === 'pro' ? 30 : Infinity
+  const canAddMore = services.length < serviceLimit
+
   const openAdd = () => {
+    if (!canAddMore) {
+      alert(`Limite atteinte (${serviceLimit} services pour votre plan). Mettez à niveau pour en ajouter d'autres.`)
+      return
+    }
     setForm(emptyForm)
     setEditingId(null)
     setShowForm(true)
@@ -153,7 +161,7 @@ export default function ServicesClient({ services: initial, businessId }: Props)
         <p className="page-header-title">
           {services.length} service{services.length !== 1 ? 's' : ''} au total
         </p>
-        <button className="add-btn" onClick={openAdd}>
+        <button className="add-btn" onClick={openAdd} disabled={!canAddMore} title={!canAddMore ? 'Limite de services atteinte' : ''} style={{ opacity: canAddMore ? 1 : 0.5, cursor: canAddMore ? 'pointer' : 'not-allowed' }}>
           + Ajouter un service
         </button>
       </div>

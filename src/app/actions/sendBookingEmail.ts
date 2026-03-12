@@ -22,7 +22,7 @@ export async function sendBookingEmail(data: {
   try {
     const { data: business } = await supabase
       .from('businesses')
-      .select('business_name, owner_id')
+      .select('business_name, owner_id, plan_type')
       .eq('id', data.business_id)
       .single()
 
@@ -58,6 +58,38 @@ export async function sendBookingEmail(data: {
         </div>
       `
     })
+
+    // Customer confirmation email (Pro/Elite plan only)
+    if (data.customer_email && ['pro', 'elite'].includes(business.plan_type)) {
+      await resend.emails.send({
+        from: 'BeautyGlow <onboarding@resend.dev>',
+        to: data.customer_email,
+        subject: `Confirmation de votre rendez-vous — ${business.business_name}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; color: #333; border: 1px solid #eaeaea; border-radius: 8px; overflow: hidden;">
+            <div style="background-color: #fcfcfc; padding: 24px; text-align: center; border-bottom: 1px solid #eaeaea;">
+              <h1 style="font-size: 1.4rem; margin: 0; color: #111;">${business.business_name}</h1>
+            </div>
+            <div style="padding: 32px 24px;">
+              <p style="margin-top: 0; font-size: 1.05rem; color: #222;">Bonjour <strong>${data.customer_name}</strong>,</p>
+              <p style="font-size: 0.95rem; line-height: 1.6; color: #555;">
+                Votre demande de réservation pour <strong>${service?.name || 'ce service'}</strong> a bien été enregistrée et transmise au salon.
+              </p>
+              <div style="background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 20px; margin: 28px 0;">
+                <p style="margin: 0 0 12px 0; font-size: 0.95rem;"><strong>🗓 Date :</strong> ${data.booking_date}</p>
+                <p style="margin: 0; font-size: 0.95rem;"><strong>⏰ Heure :</strong> ${data.booking_time}</p>
+              </div>
+              <p style="font-size: 0.95rem; color: #666; margin-bottom: 0;">
+                À très bientôt !<br>L'équipe ${business.business_name}
+              </p>
+            </div>
+            <div style="background-color: #fafafa; padding: 16px; text-align: center; border-top: 1px solid #eaeaea; font-size: 0.75rem; color: #999;">
+              Propulsé par BeautyGlow
+            </div>
+          </div>
+        `
+      })
+    }
   } catch (err: any) {
     console.error('Email failed:', err?.message)
   }

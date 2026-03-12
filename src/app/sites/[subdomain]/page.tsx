@@ -19,7 +19,9 @@ export default async function SalonPage({
 
   const { data: businesses } = await supabase
     .from("businesses")
-    .select("*")
+    .select(
+      "id, business_name, subdomain, phone, address, description, logo_url, opening_hours, social_links, plan_type, theme, trial_ends_at",
+    )
     .eq("subdomain", subdomain)
     .limit(1);
 
@@ -40,6 +42,32 @@ export default async function SalonPage({
         }}
       >
         Salon introuvable
+      </div>
+    );
+  }
+
+  const isTrialExpired =
+    business.plan_type === 'trial' &&
+    new Date(business.trial_ends_at) < new Date();
+
+  if (isTrialExpired) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#0d0d0d",
+          color: "#fff",
+          fontFamily: "serif",
+          padding: "20px",
+          textAlign: "center"
+        }}
+      >
+        <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>Salon indisponible</h1>
+        <p style={{ color: "#aaa", fontSize: "1.1rem" }}>La période d'essai de ce salon a expiré.</p>
       </div>
     );
   }
@@ -69,11 +97,11 @@ export default async function SalonPage({
 
   return (
     <SalonClient
-      business={business}
-      services={services || []}
-      photos={photos || []}
-      testimonials={testimonials || []}
-      beforeAfters={beforeAfters || []}
+      business={business} // ← theme is inside business object, this is fine
+      services={services}
+      photos={photos}
+      testimonials={testimonials}
+      beforeAfters={beforeAfters}
     />
   );
 }

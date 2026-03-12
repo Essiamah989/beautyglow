@@ -11,7 +11,7 @@ export default async function ServicesPage() {
 
   const { data: business } = await supabase
     .from('businesses')
-    .select('id')
+    .select('id, plan_type')
     .eq('owner_id', user.id)
     .single()
 
@@ -27,6 +27,7 @@ export default async function ServicesPage() {
     <ServicesClient
       services={services ?? []}
       businessId={business.id}
+      planType={business.plan_type}
     />
   )
 }

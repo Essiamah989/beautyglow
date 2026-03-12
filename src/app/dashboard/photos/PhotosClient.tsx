@@ -31,6 +31,7 @@ interface Props {
   businessId: string
   services: Service[]
   beforeAfters: BeforeAfter[]
+  planType: string
 }
 
 const supabase = createBrowserClient(
@@ -50,6 +51,7 @@ export default function PhotosClient({
   businessId,
   services,
   beforeAfters: initialBA,
+  planType,
 }: Props) {
   const [activeTab, setActiveTab]   = useState<'gallery' | 'before_after'>('gallery')
   const [photos, setPhotos]         = useState<Photo[]>(initial)
@@ -69,8 +71,15 @@ export default function PhotosClient({
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const photoLimit = planType === 'basic' || planType === 'trial' ? 10 : planType === 'pro' ? 50 : Infinity
+  const canAddMore = photos.length < photoLimit
+
   // ── Upload gallery photo ──
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canAddMore) {
+      alert(`Limite atteinte (${photoLimit} photos pour votre plan). Mettez à niveau pour en ajouter d'autres.`)
+      return
+    }
     const files = e.target.files
     if (!files || files.length === 0) return
     setUploading(true)
@@ -245,10 +254,10 @@ export default function PhotosClient({
       {activeTab === 'gallery' && (
         <>
           {/* Upload zone */}
-          <div className="upload-zone" onClick={() => fileInputRef.current?.click()}>
+          <div className="upload-zone" onClick={() => canAddMore && fileInputRef.current?.click()} style={{ opacity: canAddMore ? 1 : 0.5, cursor: canAddMore ? 'pointer' : 'not-allowed' }}>
             <span className="upload-icon">◻</span>
             <p className="upload-text">
-              Cliquez pour télécharger des photos
+              {canAddMore ? 'Cliquez pour télécharger des photos' : 'Limite de photos atteinte'}
               <br />
               <span>JPG, PNG — plusieurs fichiers acceptés</span>
             </p>
@@ -264,7 +273,7 @@ export default function PhotosClient({
               </select>
               <button
                 className="upload-btn"
-                disabled={uploading}
+                disabled={uploading || !canAddMore}
                 onClick={() => fileInputRef.current?.click()}
               >
                 {uploading ? 'Téléchargement...' : '+ Ajouter des photos'}

@@ -263,10 +263,11 @@ const STRIP = [
   { t:'Thèmes exclusifs',       hi:true },{ t:'Dashboard complet',    hi:false },
 ]
 
-// FIXED: prices match 00-MASTER-PROJECT-DOCUMENTATION.md (69/129 TND)
+// FIXED: prices match 00-MASTER-PROJECT-DOCUMENTATION.md (89/149/229 TND)
 const PRICING = [
   { tier:'Basic', price:'89',  badge:null,        feats:['Site web professionnel','Réservation en ligne','Dashboard complet','Galerie photos','Notifications email','Support standard'] },
   { tier:'Pro',   price:'149', badge:'Populaire', feats:['Tout le plan Basic','Domaine personnalisé','Campagnes email','Statistiques avancées','Support prioritaire','Multi-staff (bientôt)'] },
+  { tier:'Elite', price:'229', badge:'Empire',    feats:['Multi-lieux (jusqu\'à 3 salons)','Agendas par employé','Rappels SMS','Codes promo','Liste d\'attente','Manager de compte dédié'] },
 ]
 
 /* ══════════════════════════════════════════

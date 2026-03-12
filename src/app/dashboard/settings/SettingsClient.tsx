@@ -26,6 +26,7 @@ export default function SettingsClient({ business }: { business: any }) {
     phone:         business.phone         || '',
     address:       business.address       || '',
     description:   business.description   || '',
+    logo_url:      business.logo_url      || '',
   })
 
   const [social, setSocial] = useState({
@@ -50,6 +51,34 @@ export default function SettingsClient({ business }: { business: any }) {
   const [saved,  setSaved]  = useState(false)
   const [theme,  setTheme]  = useState(business.theme || 'lumiere')
   const [themeSaving, setThemeSaving] = useState(false)
+  const [logoUploading, setLogoUploading] = useState(false)
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoUploading(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const fileName = `logos/${business.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('business-asset')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false })
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('business-asset')
+        .getPublicUrl(fileName)
+
+      setForm(p => ({ ...p, logo_url: publicUrl }))
+    } catch (err: any) {
+      console.error('Logo upload failed:', err?.message)
+      alert('Erreur lors du téléchargement du logo.')
+    } finally {
+      setLogoUploading(false)
+    }
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -61,6 +90,7 @@ export default function SettingsClient({ business }: { business: any }) {
           phone:         form.phone,
           address:       form.address,
           description:   form.description,
+          logo_url:      form.logo_url,
           social_links:  social,
           opening_hours: hours,
           theme,
@@ -91,6 +121,19 @@ export default function SettingsClient({ business }: { business: any }) {
         {/* ── Business info ── */}
         <div className="settings-section">
           <h2 className="section-title">Informations</h2>
+
+          <div className="form-group">
+            <label className="form-label">Logo du salon</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              {form.logo_url && (
+                <img src={form.logo_url} alt="Logo" style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #eaeaea' }} />
+              )}
+              <label className="upload-btn" style={{ cursor: 'pointer', padding: '8px 16px', border: '1px solid #eaeaea', borderRadius: '6px', fontSize: '0.85rem' }}>
+                {logoUploading ? 'Téléchargement...' : 'Changer de logo'}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoUpload} disabled={logoUploading} />
+              </label>
+            </div>
+          </div>
 
           <div className="form-group">
             <label className="form-label">Nom du salon</label>
@@ -270,11 +313,16 @@ export default function SettingsClient({ business }: { business: any }) {
                   heading: '#0C6E72',
                 }
               },
-            ].map(t => (
+            ].map(t => {
+              const isLocked = (business.plan_type === 'basic' || business.plan_type === 'trial') && t.id !== 'lumiere';
+              return (
               <button
                 key={t.id}
                 className={`theme-card ${theme === t.id ? 'theme-card--active' : ''}`}
-                onClick={() => setTheme(t.id)}
+                onClick={() => !isLocked && setTheme(t.id)}
+                disabled={isLocked}
+                title={isLocked ? 'Plan Pro ou Elite requis' : ''}
+                style={isLocked ? { opacity: 0.6, cursor: 'not-allowed', position: 'relative' } : { position: 'relative' }}
               >
                 {/* Mini site preview */}
                 <div className="theme-preview" style={{ background: t.preview.bg }}>
@@ -304,8 +352,11 @@ export default function SettingsClient({ business }: { business: any }) {
                     ))}
                   </div>
                   {/* Selected check */}
-                  {theme === t.id && (
+                  {theme === t.id && !isLocked && (
                     <div className="theme-preview-check">✓</div>
+                  )}
+                  {isLocked && (
+                    <div style={{ position: 'absolute', top: 8, right: 8, background: '#111', color: '#fff', fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, zIndex: 10 }}>Pro</div>
                   )}
                 </div>
                 {/* Label */}
@@ -314,7 +365,7 @@ export default function SettingsClient({ business }: { business: any }) {
                   <span className="theme-card-desc">{t.desc}</span>
                 </div>
               </button>
-            ))}
+            )})}
           </div>
         </div>
 

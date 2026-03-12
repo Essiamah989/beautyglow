@@ -13,7 +13,7 @@ export default async function PhotosPage() {
 
   const { data: business } = await supabase
     .from("businesses")
-    .select("id")
+    .select("id, plan_type")
     .eq("owner_id", user.id)
     .single();
 
@@ -44,6 +44,7 @@ export default async function PhotosPage() {
       businessId={business.id}
       services={services ?? []}
       beforeAfters={beforeAfters ?? []}
+      planType={business.plan_type}
     />
   );
 }

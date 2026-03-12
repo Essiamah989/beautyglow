@@ -1,5 +1,8 @@
 // src/app/sites/[subdomain]/SalonClient.tsx
 "use client";
+import "./lumiere.css";
+import "./blanc.css";
+import "./eclat.css";
 import "./azur.css";
 import { useState } from "react";
 import Image from "next/image";
@@ -41,6 +44,7 @@ interface Business {
   address: string;
   description: string;
   logo_url: string;
+  theme: string | null;    
   opening_hours: {
     monday:    { open: string; close: string; closed: boolean };
     tuesday:   { open: string; close: string; closed: boolean };
@@ -155,8 +159,10 @@ export default function SalonClient({
     }
   };
 
+  const themeClass = business.theme ?? "lumiere";
+  
   return (
-    <>
+    <div data-theme={themeClass}>
       {/* ── NAV ── */}
       <nav className="nav">
         <span className="nav-name">{business.business_name}</span>
@@ -510,6 +516,6 @@ export default function SalonClient({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
