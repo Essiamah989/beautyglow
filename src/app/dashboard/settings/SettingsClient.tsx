@@ -27,6 +27,7 @@ export default function SettingsClient({ business }: { business: any }) {
     address:       business.address       || '',
     description:   business.description   || '',
     logo_url:      business.logo_url      || '',
+    custom_domain: business.custom_domain || '',
   })
 
   const [social, setSocial] = useState({
@@ -179,8 +180,39 @@ export default function SettingsClient({ business }: { business: any }) {
           </div>
         </div>
 
-        {/* ── Social + Hours ── */}
+        {/* ── Domain + Social ── */}
         <div>
+          {/* Custom Domain (Pro Gate) */}
+          <div className="settings-section">
+            <h2 className="section-title">Domaine personnalisé</h2>
+            <p className="section-desc">Utilisez votre propre adresse (ex: www.monsalon.com) au lieu du sous-domaine de base.</p>
+            
+            {["pro", "elite"].includes(business.plan_type) ? (
+              <div className="form-group">
+                <label className="form-label">Nom de domaine</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
+                    className="form-input"
+                    placeholder="www.votredomaine.com"
+                    value={form.custom_domain}
+                    onChange={e => setForm(p => ({ ...p, custom_domain: e.target.value }))}
+                  />
+                  <button className="upload-btn" style={{ whiteSpace: 'nowrap' }} onClick={() => alert('Veuillez contacter le support pour lier votre domaine.')}>
+                    Vérifier
+                  </button>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#666', marginTop: '8px' }}>
+                  Statut : {business.custom_domain_verified ? '✅ Vérifié' : '⏳ En attente de configuration DNS'}
+                </p>
+              </div>
+            ) : (
+              <div className="lock-notice" style={{ background: '#f9f9f9', padding: '16px', borderRadius: '8px', border: '1px dashed #ddd', textAlign: 'center' }}>
+                <span style={{ fontSize: '1.2rem', display: 'block', marginBottom: '8px' }}>🔒</span>
+                <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '12px' }}>Cette fonctionnalité nécessite un plan **Pro** ou **Elite**.</p>
+                <button className="upload-btn" style={{ fontSize: '0.75rem' }} onClick={() => alert('Redirection vers les plans...')}>Mettre à niveau</button>
+              </div>
+            )}
+          </div>
 
           {/* Social links */}
           <div className="settings-section">
