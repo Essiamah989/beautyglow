@@ -23,11 +23,17 @@ export default async function ServicesPage() {
     .eq('business_id', business.id)
     .order('display_order', { ascending: true })
 
+  const { data: beforeAfters } = await supabase
+    .from('before_after_photos')
+    .select('*')
+    .eq('business_id', business.id)
+
   return (
     <ServicesClient
       services={services ?? []}
       businessId={business.id}
       planType={business.plan_type}
+      initialBeforeAfters={beforeAfters ?? []}
     />
   )
 }

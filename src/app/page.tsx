@@ -371,7 +371,8 @@ export default function LandingPage() {
         @media(max-width:900px){ .features-grid { grid-template-columns:1fr; } .feat-visual { display:none !important; } }
 
         /* ── Pricing ── */
-        .pricing-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; max-width:740px; margin:52px auto 0; }
+        .pricing-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:22px; max-width:1100px; margin:52px auto 0; }
+        @media(max-width:960px){ .pricing-grid { grid-template-columns:1fr 1fr; max-width:740px; } }
         @media(max-width:660px){ .pricing-grid { grid-template-columns:1fr; max-width:390px; } }
 
         /* ── Testimonials ── */

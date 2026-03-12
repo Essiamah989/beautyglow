@@ -15,10 +15,19 @@ interface Service {
   display_order: number
 }
 
+interface BeforeAfter {
+  id: string
+  service_id: string
+  before_url: string
+  after_url: string
+  caption: string
+}
+
 interface Props {
   services: Service[]
   businessId: string
   planType: string
+  initialBeforeAfters: BeforeAfter[]
 }
 
 const supabase = createBrowserClient(
@@ -39,13 +48,20 @@ const emptyForm = {
   category: 'haircut',
 }
 
-export default function ServicesClient({ services: initial, businessId, planType }: Props) {
+export default function ServicesClient({ services: initial, businessId, planType, initialBeforeAfters }: Props) {
   const [services, setServices]   = useState<Service[]>(initial)
+  const [beforeAfters, setBeforeAfters] = useState<BeforeAfter[]>(initialBeforeAfters)
   const [showForm, setShowForm]   = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm]           = useState(emptyForm)
   const [loading, setLoading]     = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  // Before/After upload state
+  const [baBeforeFile, setBaBeforeFile] = useState<File | null>(null)
+  const [baAfterFile, setBaAfterFile]   = useState<File | null>(null)
+  const [baCaption, setBaCaption]       = useState('')
+  const [baUploading, setBaUploading]   = useState(false)
 
   const serviceLimit = planType === 'basic' || planType === 'trial' ? 10 : planType === 'pro' ? 30 : Infinity
   const canAddMore = services.length < serviceLimit
@@ -153,6 +169,67 @@ export default function ServicesClient({ services: initial, businessId, planType
       console.error('Toggle failed:', err?.message)
     }
   }
+
+  // ── Upload file helper ──
+  const uploadFile = async (file: File, prefix: string) => {
+    const ext      = file.name.split('.').pop()
+    const fileName = `before-after/${businessId}/${prefix}-${Date.now()}.${ext}`
+
+    const { error } = await supabase.storage
+      .from('business-asset')
+      .upload(fileName, file, { cacheControl: '3600', upsert: false })
+    if (error) throw error
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('business-asset')
+      .getPublicUrl(fileName)
+    return publicUrl
+  }
+
+  const handleSaveBA = async () => {
+    if (!baBeforeFile || !baAfterFile || !editingId) return
+    setBaUploading(true)
+    try {
+      const beforeUrl = await uploadFile(baBeforeFile, 'before')
+      const afterUrl  = await uploadFile(baAfterFile,  'after')
+
+      const { data, error } = await supabase
+        .from('before_after_photos')
+        .insert({
+          business_id: businessId,
+          service_id:  editingId,
+          before_url:  beforeUrl,
+          after_url:   afterUrl,
+          caption:     baCaption,
+        })
+        .select()
+        .single()
+      if (error) throw error
+
+      setBeforeAfters(prev => [data, ...prev])
+      setBaBeforeFile(null)
+      setBaAfterFile(null)
+      setBaCaption('')
+    } catch (err: any) {
+      console.error('BA upload failed:', err?.message)
+      alert('Erreur lors du téléchargement.')
+    } finally {
+      setBaUploading(false)
+    }
+  }
+
+  const handleDeleteBA = async (id: string) => {
+    if (!confirm('Supprimer cette transformation?')) return
+    try {
+      const { error } = await supabase.from('before_after_photos').delete().eq('id', id)
+      if (error) throw error
+      setBeforeAfters(prev => prev.filter(b => b.id !== id))
+    } catch (err: any) {
+      console.error('Delete BA failed:', err?.message)
+    }
+  }
+
+  const currentServiceBA = beforeAfters.filter(ba => ba.service_id === editingId)
 
   return (
     <>
@@ -293,6 +370,73 @@ export default function ServicesClient({ services: initial, businessId, planType
                 ))}
               </select>
             </div>
+
+            {/* ── Before / After Management ── */}
+            {editingId && (
+              <div className="section-divider" style={{ margin: '30px 0', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+                <h3 style={{ fontSize: '0.9rem', color: 'var(--text)', marginBottom: '16px' }}>
+                  Photos de transformation (Avant / Après)
+                </h3>
+
+                {/* Existing BA photos */}
+                {currentServiceBA.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+                    {currentServiceBA.map(ba => (
+                      <div key={ba.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'var(--cream)', padding: '10px', borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <img src={ba.before_url} alt="Before" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
+                          <img src={ba.after_url} alt="After" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
+                        </div>
+                        <div style={{ flex: 1, fontSize: '0.8rem', color: 'var(--text-light)' }}>
+                          {ba.caption || 'Aucune légende'}
+                        </div>
+                        <button className="icon-btn danger" onClick={() => handleDeleteBA(ba.id)}>Supprimer</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Upload new BA */}
+                <div style={{ background: 'var(--pink-soft)', padding: '16px', borderRadius: '10px' }}>
+                  <p style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--pink-deep)', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Ajouter une transformation
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
+                    <div className="form-group">
+                      <label className="form-label">Photo Avant</label>
+                      <label style={{ display: 'block', padding: '10px', background: 'white', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '0.8rem', textAlign: 'center', cursor: 'pointer' }}>
+                        {baBeforeFile ? '✓ Image choisie' : 'Choisir...'}
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setBaBeforeFile(e.target.files?.[0] || null)} />
+                      </label>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Photo Après</label>
+                      <label style={{ display: 'block', padding: '10px', background: 'white', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '0.8rem', textAlign: 'center', cursor: 'pointer' }}>
+                        {baAfterFile ? '✓ Image choisie' : 'Choisir...'}
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => setBaAfterFile(e.target.files?.[0] || null)} />
+                      </label>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <input 
+                      className="form-input" 
+                      placeholder="Légende (ex: Avant/Après Balayage)" 
+                      value={baCaption} 
+                      onChange={e => setBaCaption(e.target.value)} 
+                    />
+                  </div>
+                  <button 
+                    className="save-btn" 
+                    style={{ width: '100%', marginTop: '8px' }}
+                    onClick={handleSaveBA}
+                    disabled={baUploading || !baBeforeFile || !baAfterFile}
+                  >
+                    {baUploading ? 'Téléchargement...' : 'Enregistrer la photo'}
+                  </button>
+                </div>
+              </div>
+            )}
+
 
             <div className="modal-actions">
               <button className="cancel-btn" onClick={closeForm}>

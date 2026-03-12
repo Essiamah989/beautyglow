@@ -4,7 +4,7 @@ import "./lumiere.css";
 import "./blanc.css";
 import "./eclat.css";
 import "./azur.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { sendBookingEmail } from "@/app/actions/sendBookingEmail";
 
@@ -97,6 +97,7 @@ export default function SalonClient({
   const [customerEmail, setCustomerEmail]     = useState("");
   const [bookingDate,   setBookingDate]       = useState("");
   const [bookingTime,   setBookingTime]       = useState("");
+  const [bookedSlots,   setBookedSlots]       = useState<string[]>([]);
   const [submitting,    setSubmitting]        = useState(false);
 
   const featuredPhoto      = photos?.find((p) => p.is_featured);
@@ -119,8 +120,43 @@ export default function SalonClient({
 
   const closePopup = () => {
     setSelectedService(null);
+    setBookedSlots([]);
     document.body.style.overflow = "";
   };
+
+  // Fetch booked slots when date changes
+  useEffect(() => {
+    if (!bookingDate || !business.id) {
+      setBookedSlots([]);
+      return;
+    }
+
+    const fetchBookings = async () => {
+      try {
+        const { createClient } = await import("@supabase/supabase-js");
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        );
+        const { data, error } = await supabase
+          .from("bookings")
+          .select("booking_time, status")
+          .eq("business_id", business.id)
+          .eq("booking_date", bookingDate)
+          .neq("status", "cancelled")
+          .neq("status", "no_show");
+
+        if (error) throw error;
+        // Format times to HH:MM if they come as HH:MM:SS
+        const slots = data.map(b => b.booking_time.substring(0, 5));
+        setBookedSlots(slots);
+      } catch (err) {
+        console.error("Failed to fetch booked slots:", err);
+      }
+    };
+
+    fetchBookings();
+  }, [bookingDate, business.id]);
 
   const handleBooking = async () => {
     setSubmitting(true);
@@ -130,6 +166,34 @@ export default function SalonClient({
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       );
+      const { data: existing, error: checkError } = await supabase
+        .from("bookings")
+        .select("id, status, booking_time")
+        .eq("business_id", business.id)
+        .eq("booking_date", bookingDate)
+        .eq("booking_time", bookingTime.length === 5 ? `${bookingTime}:00` : bookingTime)
+        .neq("status", "cancelled")
+        .neq("status", "no_show")
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+      if (existing) {
+        alert("Désolé, ce créneau vient d'être réservé par un autre client. Veuillez en choisir un autre.");
+        // Refresh booked slots
+        const { data: updatedBookings } = await supabase
+          .from("bookings")
+          .select("booking_time, status")
+          .eq("business_id", business.id)
+          .eq("booking_date", bookingDate)
+          .neq("status", "cancelled")
+          .neq("status", "no_show");
+        
+        if (updatedBookings) setBookedSlots(updatedBookings.map(b => b.booking_time.substring(0, 5)));
+        setBookingTime("");
+        setSubmitting(false);
+        return;
+      }
+
       const { error } = await supabase.from("bookings").insert({
         business_id:    business.id,
         service_id:     selectedService?.id,
@@ -153,7 +217,25 @@ export default function SalonClient({
       setBookingStep("success");
     } catch (error: any) {
       console.error("Booking failed:", error?.message);
-      alert("Une erreur est survenue. Veuillez réessayer.");
+      if (error?.message?.includes("idx_bookings_no_double_booking")) {
+        alert("Désolé, ce créneau vient d'être réservé par un autre client. Veuillez en choisir un autre.");
+        // Refresh slots in the UI
+        const { createClient } = await import("@supabase/supabase-js");
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        );
+        const { data: updated } = await supabase
+          .from("bookings")
+          .select("booking_time")
+          .eq("business_id", business.id)
+          .eq("booking_date", bookingDate)
+          .in("status", ["pending", "confirmed", "completed"]);
+        if (updated) setBookedSlots(updated.map(b => b.booking_time.substring(0, 5)));
+        setBookingTime("");
+      } else {
+        alert("Une erreur est survenue. Veuillez réessayer.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -162,10 +244,22 @@ export default function SalonClient({
   const themeClass = business.theme ?? "lumiere";
   
   return (
-    <div data-theme={themeClass}>
+    <div data-theme={themeClass} style={{ minHeight: "100vh" }}>
       {/* ── NAV ── */}
       <nav className="nav">
-        <span className="nav-name">{business.business_name}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {business.logo_url && (
+            <div style={{ position: "relative", width: "40px", height: "40px", borderRadius: "8px", overflow: "hidden" }}>
+              <Image 
+                src={business.logo_url} 
+                alt={business.business_name} 
+                fill 
+                style={{ objectFit: "cover" }} 
+              />
+            </div>
+          )}
+          <span className="nav-name">{business.business_name}</span>
+        </div>
         <a href="#booking" className="nav-book">Réserver</a>
       </nav>
 
@@ -477,15 +571,19 @@ export default function SalonClient({
                 <div className="form-group">
                   <label className="form-label">Heure souhaitée *</label>
                   <div className="time-slots">
-                    {TIME_SLOTS.map((time) => (
-                      <div
-                        key={time}
-                        className={`time-slot${bookingTime === time ? " selected" : ""}`}
-                        onClick={() => setBookingTime(time)}
-                      >
-                        {time}
-                      </div>
-                    ))}
+                    {TIME_SLOTS.map((time) => {
+                      const isBooked = bookedSlots.includes(time);
+                      return (
+                        <div
+                          key={time}
+                          className={`time-slot${bookingTime === time ? " selected" : ""}${isBooked ? " booked" : ""}`}
+                          onClick={() => !isBooked && setBookingTime(time)}
+                          style={isBooked ? { opacity: 0.4, cursor: "not-allowed", textDecoration: "line-through", background: "#f0f0f0" } : {}}
+                        >
+                          {time}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
                 <button

@@ -2,213 +2,256 @@
 
 import { useMemo } from "react"
 
-interface Booking {
-  id: string
-  booking_date: string
-  status: string
-  service_id: string | null
-}
-
-interface Customer {
-  id: string
-  created_at: string
-}
-
-interface Service {
-  id: string
-  name: string
-  price: number
-}
-
-interface Props {
-  bookings: Booking[]
-  customers: Customer[]
-  services: Service[]
-}
-
-export default function AnalyticsClient({ bookings, customers, services }: Props) {
+/**
+ * Analytics Dashboard component - REBUILT FROM SCRATCH
+ * Designed for maximum reliability on all browsers.
+ */
+export default function AnalyticsClient({ bookings = [], customers = [], services = [] }: any) {
+  
   const stats = useMemo(() => {
-    // Current Date details
+    // 1. Setup Dates
     const now = new Date()
-    const currentMonth = now.getMonth()
+    const currentMonthIndex = now.getMonth() // 0-11
     const currentYear = now.getFullYear()
-    
-    // Revenue calculations
-    let totalRevenue = 0
-    let currentMonthRevenue = 0
-    let lastMonthRevenue = 0
 
-    const validBookings = bookings.filter(b => b.status === "completed" || b.status === "confirmed")
+    // 2. Map services for fast price lookup
+    const servicePriceMap: Record<string, number> = {}
+    services.forEach((s: any) => {
+      servicePriceMap[s.id] = parseFloat(String(s.price)) || 0
+    })
 
-    validBookings.forEach(booking => {
-      const service = services.find(s => s.id === booking.service_id)
-      if (service) {
-        totalRevenue += service.price
+    // 3. Filter valid bookings (Confirmed or Completed)
+    const validBookings = bookings.filter((b: any) => 
+      b.status?.toLowerCase() === "completed" || b.status?.toLowerCase() === "confirmed"
+    )
+
+    // 4. Helper to calculate revenue for a specific Year/Month
+    const calculateMonthRevenue = (year: number, month: number) => {
+      return validBookings.reduce((acc: number, b: any) => {
+        if (!b.booking_date) return acc
         
-        const bDate = new Date(booking.booking_date)
-        if (bDate.getFullYear() === currentYear && bDate.getMonth() === currentMonth) {
-          currentMonthRevenue += service.price
-        } else if (
-          bDate.getFullYear() === currentYear && bDate.getMonth() === currentMonth - 1 ||
-          (currentMonth === 0 && bDate.getFullYear() === currentYear - 1 && bDate.getMonth() === 11)
-        ) {
-          lastMonthRevenue += service.price
+        // Expected format "YYYY-MM-DD"
+        const parts = b.booking_date.split("-")
+        const bYear = parseInt(parts[0])
+        const bMonth = parseInt(parts[1]) // 1-indexed
+
+        if (bYear === year && bMonth === (month + 1)) {
+          return acc + (servicePriceMap[b.service_id] || 0)
         }
-      }
-    })
+        return acc
+      }, 0)
+    }
 
-    // Customer calculations
-    let currentMonthCustomers = 0
-    let lastMonthCustomers = 0
-
-    customers.forEach(customer => {
-      const cDate = new Date(customer.created_at)
-      if (cDate.getFullYear() === currentYear && cDate.getMonth() === currentMonth) {
-        currentMonthCustomers++
-      } else if (
-        cDate.getFullYear() === currentYear && cDate.getMonth() === currentMonth - 1 ||
-        (currentMonth === 0 && cDate.getFullYear() === currentYear - 1 && cDate.getMonth() === 11)
-      ) {
-        lastMonthCustomers++
-      }
-    })
-
-    // Top Services
-    const serviceCounts: Record<string, number> = {}
-    validBookings.forEach(b => {
-      if (b.service_id) {
-        serviceCounts[b.service_id] = (serviceCounts[b.service_id] || 0) + 1
-      }
-    })
-
-    const topServices = Object.entries(serviceCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([serviceId, count]) => {
-        const s = services.find(x => x.id === serviceId)
-        return { name: s?.name || "Service Inconnu", count, revenue: count * (s?.price || 0) }
-      })
-
-    // Prepare chart data (Last 6 months revenue)
-    const months = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Jul", "Août", "Sep", "Oct", "Nov", "Déc"]
+    // 5. Build Chart Data (Last 6 Months)
+    const monthNames = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sep", "Oct", "Nov", "Déc"]
     const chartData = []
     
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(currentYear, currentMonth - i, 1)
-      const m = d.getMonth()
-      const y = d.getFullYear()
+      const d = new Date(currentYear, currentMonthIndex - i, 1)
+      const targetYear = d.getFullYear()
+      const targetMonth = d.getMonth()
       
-      let mRev = 0
-      validBookings.forEach(booking => {
-        const bDate = new Date(booking.booking_date)
-        if (bDate.getFullYear() === y && bDate.getMonth() === m) {
-          const service = services.find(s => s.id === booking.service_id)
-          if (service) mRev += service.price
-        }
+      const revenue = calculateMonthRevenue(targetYear, targetMonth)
+      
+      chartData.push({
+        label: monthNames[targetMonth],
+        revenue: revenue,
+        monthKey: `${targetYear}-${targetMonth}`
       })
-      
-      chartData.push({ label: months[m], revenue: mRev })
     }
 
-    const maxChartValue = Math.max(...chartData.map(d => d.revenue), 100)
+    // 6. Summary Stats
+    const currentMonthRevenue = calculateMonthRevenue(currentYear, currentMonthIndex)
+    
+    const lastMonthDate = new Date(currentYear, currentMonthIndex - 1, 1)
+    const lastMonthRevenue = calculateMonthRevenue(lastMonthDate.getFullYear(), lastMonthDate.getMonth())
+    
+    const revenueGrowth = lastMonthRevenue > 0 
+      ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 
+      : (currentMonthRevenue > 0 ? 100 : 0)
 
-    const revenueGrowth = lastMonthRevenue ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100 : 100
-    const customerGrowth = lastMonthCustomers ? ((currentMonthCustomers - lastMonthCustomers) / lastMonthCustomers) * 100 : 100
+    const maxGraphRevenue = Math.max(...chartData.map(d => d.revenue), 100)
+
+    // 7. Top Services Calculation
+    const serviceRevenue: Record<string, { name: string, rev: number, count: number }> = {}
+    validBookings.forEach(b => {
+      const sId = b.service_id
+      if (!sId) return
+      
+      if (!serviceRevenue[sId]) {
+        const s = services.find((x: any) => x.id === sId)
+        serviceRevenue[sId] = { name: s?.name || "Service Inconnu", rev: 0, count: 0 }
+      }
+      
+      const price = servicePriceMap[sId] || 0
+      serviceRevenue[sId].rev += price
+      serviceRevenue[sId].count += 1
+    })
+
+    const topServices = Object.values(serviceRevenue)
+      .sort((a, b) => b.rev - a.rev)
+      .slice(0, 5)
 
     return {
-      totalRevenue,
       currentMonthRevenue,
       revenueGrowth,
-      totalCustomers: customers.length,
-      currentMonthCustomers,
-      customerGrowth,
       totalBookings: validBookings.length,
-      topServices,
       chartData,
-      maxChartValue
+      maxGraphRevenue,
+      topServices,
+      hasData: validBookings.length > 0
     }
-  }, [bookings, customers, services])
+  }, [bookings, services])
 
   return (
     <div className="fade-in">
-      <div className="section-header" style={{ marginBottom: "32px" }}>
-        <h2 className="section-title" style={{ marginBottom: "8px" }}>Analytique</h2>
-        <p className="section-desc">Suivez les performances de votre salon (réservations, revenus, clients).</p>
+      <div style={{ marginBottom: "40px" }}>
+        <h2 className="section-title" style={{ fontSize: "1.75rem", marginBottom: "8px" }}>Statistiques & Analytique</h2>
+        <p className="section-desc">Retrouvez ici la performance globale de votre établissement.</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "24px", marginBottom: "32px" }}>
-        {/* Revenue Card */}
-        <div className="card" style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "12px" }}>
-          <div style={{ color: "var(--text-light)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase" }}>Revenu ce mois</div>
-          <div style={{ fontSize: "2rem", fontWeight: 700, color: "var(--text-dark)" }}>{stats.currentMonthRevenue.toFixed(2)} TND</div>
-          <div style={{ fontSize: "0.85rem", color: stats.revenueGrowth >= 0 ? "#16a34a" : "#dc2626", display: "flex", alignItems: "center", gap: "4px" }}>
-            {stats.revenueGrowth >= 0 ? "↑" : "↓"} {Math.abs(stats.revenueGrowth).toFixed(1)}% vs mois dernier
+      {/* Overview Cards */}
+      <div style={{ 
+        display: "grid", 
+        gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", 
+        gap: "24px", 
+        marginBottom: "40px" 
+      }}>
+        <div className="stat-card" style={{ borderLeft: "4px solid var(--pink)" }}>
+          <span className="stat-card-label">Revenu ce mois</span>
+          <div className="stat-card-value">{stats.currentMonthRevenue.toFixed(2)} <span>TND</span></div>
+          <div style={{ fontSize: "0.85rem", color: stats.revenueGrowth >= 0 ? "#10b981" : "#ef4444", fontWeight: 600 }}>
+             {stats.revenueGrowth >= 0 ? "↑ +" : "↓ "}{Math.abs(stats.revenueGrowth).toFixed(1)}% <span style={{ color: "var(--text-light)", fontWeight: 400 }}>vs mois dernier</span>
           </div>
         </div>
 
-        {/* Bookings Card */}
-        <div className="card" style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "12px" }}>
-          <div style={{ color: "var(--text-light)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase" }}>Total Réservations</div>
-          <div style={{ fontSize: "2rem", fontWeight: 700, color: "var(--text-dark)" }}>{stats.totalBookings}</div>
-          <div style={{ fontSize: "0.85rem", color: "var(--text-light)" }}>Validées ou terminées</div>
-        </div>
-
-        {/* Customers Card */}
-        <div className="card" style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "12px" }}>
-          <div style={{ color: "var(--text-light)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase" }}>Nouveaux clients (Mois)</div>
-          <div style={{ fontSize: "2rem", fontWeight: 700, color: "var(--text-dark)" }}>{stats.currentMonthCustomers}</div>
-          <div style={{ fontSize: "0.85rem", color: stats.customerGrowth >= 0 ? "#16a34a" : "#dc2626", display: "flex", alignItems: "center", gap: "4px" }}>
-            {stats.customerGrowth >= 0 ? "↑" : "↓"} {Math.abs(stats.customerGrowth).toFixed(1)}% vs mois dernier
-          </div>
+        <div className="stat-card">
+          <span className="stat-card-label">Réservations</span>
+          <div className="stat-card-value">{stats.totalBookings}</div>
+          <div className="stat-card-sub">Réservations confirmées ou terminées</div>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
-        {/* Simple Revenue Chart */}
-        <div className="card" style={{ padding: "24px", display: "flex", flexDirection: "column" }}>
-          <h3 style={{ margin: "0 0 24px 0", fontSize: "1.1rem" }}>Revenu (6 derniers mois)</h3>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: "16px", height: "250px", marginTop: "auto", paddingTop: "20px" }}>
-            {stats.chartData.map((data, i) => (
-              <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", height: "100%" }}>
-                <div style={{ flex: 1, display: "flex", alignItems: "flex-end", width: "100%", justifyContent: "center" }}>
-                  <div 
-                    style={{ 
-                      width: "100%", 
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 2fr))", gap: "32px" }}>
+        
+        {/* Main Chart Section */}
+        <div className="dash-card" style={{ display: "flex", flexDirection: "column" }}>
+          <div className="dash-card-header">
+            <h3 className="dash-card-title">Évolution du Revenu (6 mois)</h3>
+          </div>
+          <div className="dash-card-body" style={{ flex: 1, padding: "40px 30px" }}>
+            
+            <div style={{ 
+              height: "250px", 
+              borderBottom: "1px solid var(--border-solid)",
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              gap: "10px",
+              paddingBottom: "1px",
+              marginBottom: "20px",
+              position: "relative"
+            }}>
+              {/* Vertical Guide Lines */}
+              {[0, 25, 50, 75, 100].map(p => (
+                <div key={p} style={{ 
+                  position: "absolute", 
+                  bottom: `${p}%`, 
+                  left: 0, right: 0, 
+                  height: "1px", 
+                  background: "var(--border-solid)", 
+                  opacity: 0.4, 
+                  zIndex: 0 
+                }} />
+              ))}
+
+              {stats.chartData.map((data, idx) => {
+                const heightPercent = (data.revenue / stats.maxGraphRevenue) * 100
+                const barHeight = Math.max(heightPercent, data.revenue > 0 ? 3 : 0)
+                
+                return (
+                  <div key={idx} style={{ 
+                    flex: 1, 
+                    display: "flex", 
+                    flexDirection: "column", 
+                    alignItems: "center",
+                    justifyContent: "flex-end",
+                    height: "100%",
+                    zIndex: 1
+                  }}>
+                    {/* Value Label on Top */}
+                    {data.revenue > 0 && (
+                      <div style={{ 
+                        fontSize: "0.7rem", 
+                        fontWeight: 700, 
+                        color: "var(--pink-deep)",
+                        marginBottom: "6px"
+                      }}>
+                        {Math.round(data.revenue)}
+                      </div>
+                    )}
+
+                    {/* The Bar itself */}
+                    <div style={{ 
+                      width: "80%", 
                       maxWidth: "40px", 
-                      backgroundColor: "var(--primary)", 
-                      height: `${(data.revenue / stats.maxChartValue) * 100}%`,
-                      borderRadius: "4px 4px 0 0",
-                      transition: "height 0.5s ease"
-                    }} 
-                  />
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "var(--text-light)" }}>{data.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Top Services */}
-        <div className="card" style={{ padding: "24px" }}>
-          <h3 style={{ margin: "0 0 24px 0", fontSize: "1.1rem" }}>Top Services</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-            {stats.topServices.length > 0 ? stats.topServices.map((service, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontWeight: 500 }}>{service.name}</div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--text-light)" }}>{service.count} réservation{service.count !== 1 ? 's' : ''}</div>
-                </div>
-                <div style={{ fontWeight: 600, color: "var(--primary)" }}>
-                  {service.revenue.toFixed(2)} TND
-                </div>
-              </div>
-            )) : (
-              <div style={{ fontSize: "0.85rem", color: "var(--text-light)", textAlign: "center", padding: "20px 0" }}>
-                Aucune donnée de réservation pour le moment.
+                      height: `${barHeight}%`, 
+                      background: "linear-gradient(to top, var(--pink), #FF69B4)", 
+                      borderRadius: "6px 6px 0 0",
+                      transition: "height 1s cubic-bezier(0.17, 0.67, 0.83, 0.67)",
+                      boxShadow: data.revenue > 0 ? "0 -2px 10px var(--pink-glow-sm)" : "none",
+                      minHeight: data.revenue > 0 ? "4px" : "0px"
+                    }} />
+                    
+                    {/* Month Label */}
+                    <div style={{ 
+                      position: "absolute",
+                      bottom: "-25px",
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                      color: "var(--text-light)"
+                    }}>
+                      {data.label}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+            
+            {!stats.hasData && (
+              <div style={{ textAlign: "center", color: "var(--text-light)", marginTop: "40px", fontStyle: "italic" }}>
+                Aucune donnée de réservation trouvée pour cette période.
               </div>
             )}
           </div>
         </div>
+
+        {/* Top Services Table */}
+        <div className="dash-card">
+          <div className="dash-card-header">
+            <h3 className="dash-card-title">Services les plus Demandés</h3>
+          </div>
+          <div className="dash-card-body">
+            {stats.topServices.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                {stats.topServices.map((s, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "12px", borderBottom: "1px solid var(--cream-dark)" }}>
+                    <div>
+                      <div style={{ fontWeight: 600, color: "var(--text)" }}>{s.name}</div>
+                      <div style={{ fontSize: "0.75rem", color: "var(--text-light)" }}>{s.count} réservations</div>
+                    </div>
+                    <div style={{ fontWeight: 700, color: "var(--pink-deep)", fontSize: "1.1rem" }}>
+                      {s.rev.toFixed(2)} <span style={{ fontSize: "0.7rem" }}>TND</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ textAlign: "center", color: "var(--text-light)", padding: "20px" }}>Aucun service enregistré.</p>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   )

@@ -292,6 +292,18 @@ body {
 ──────────────────────────── */
 
 /* Stat cards */
+.modal {
+  background: var(--white);
+  width: 100%;
+  max-width: 500px;
+  border-radius: 20px;
+  padding: 32px;
+  position: relative;
+  animation: modalIn 0.3s var(--ease-out);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
 .stat-card {
   background: var(--white);
   border: 1.5px solid var(--border-solid);
