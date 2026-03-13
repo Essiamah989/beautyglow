@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { sendCampaign } from "@/app/actions/sendCampaign"
+import { generateAIMarketing } from "@/app/actions/generateAIMarketing"
 
 interface Props {
   totalCustomers: number
@@ -17,7 +18,14 @@ export default function MarketingClient({ totalCustomers, planType }: Props) {
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{ success: boolean; count?: number; error?: string } | null>(null)
 
+  // AI Prompt State
+  const [showAIPrompt, setShowAIPrompt] = useState(false)
+  const [aiPrompt, setAiPrompt] = useState("")
+  const [generating, setGenerating] = useState(false)
+  const [aiResult, setAiResult] = useState<{ success: boolean; error?: string } | null>(null)
+
   const isElite = planType === "elite"
+  const hasAIAccess = planType === "pro" || planType === "elite"
 
   const handleSend = async () => {
     if (!subject.trim() || !content.trim()) {
@@ -70,6 +78,32 @@ export default function MarketingClient({ totalCustomers, planType }: Props) {
       setResult({ success: false, error: err.message || "Erreur lors de l'envoi." })
     } finally {
       setSending(false)
+    }
+  }
+
+  const handleGenerateAI = async () => {
+    if (!aiPrompt.trim()) {
+      alert("Veuillez décrire brièvement ce que vous souhaitez écrire.")
+      return
+    }
+
+    setGenerating(true)
+    setAiResult(null)
+
+    try {
+      const res = await generateAIMarketing(aiPrompt)
+      if (res.success && res.subject && res.body) {
+        setSubject(res.subject)
+        setContent(res.body)
+        setShowAIPrompt(false)
+        setAiPrompt("")
+      } else {
+        setAiResult({ success: false, error: res.error || "Erreur inconnue." })
+      }
+    } catch (err: any) {
+      setAiResult({ success: false, error: err.message || "Erreur lors de la génération." })
+    } finally {
+      setGenerating(false)
     }
   }
 
@@ -128,7 +162,70 @@ export default function MarketingClient({ totalCustomers, planType }: Props) {
           </div>
 
           <div className="form-group" style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <label className="form-label">Corps du message</label>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "8px" }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>Corps du message</label>
+              <button 
+                className="action-btn" 
+                style={{ 
+                  background: hasAIAccess ? "linear-gradient(135deg, #10b981, #059669)" : "#e5e7eb", 
+                  color: hasAIAccess ? "white" : "#6b7280",
+                  padding: "6px 12px", 
+                  fontSize: "0.85rem",
+                  border: "none",
+                  borderRadius: "6px",
+                  cursor: hasAIAccess ? "pointer" : "not-allowed",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px"
+                }}
+                onClick={() => hasAIAccess ? setShowAIPrompt(p => !p) : alert("Cette fonctionnalité nécessite un plan Pro ou Elite.")}
+                title={hasAIAccess ? "Générer avec l'IA" : "Plan Pro requis"}
+              >
+                {!hasAIAccess && "🔒"} ✨ Générer avec l'IA
+              </button>
+            </div>
+
+            {showAIPrompt && hasAIAccess && (
+              <div style={{ 
+                background: "#f0fdf4", 
+                border: "1px solid #bbf7d0", 
+                borderRadius: "8px", 
+                padding: "16px", 
+                marginBottom: "16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px"
+              }}>
+                <div>
+                  <label className="form-label" style={{ fontSize: "0.85rem", color: "#166534" }}> Que voulez-vous annoncer ?</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="Ex: Une réduction de 20% pour la fête des mères sur tous les soins du visage." 
+                    value={aiPrompt}
+                    onChange={e => setAiPrompt(e.target.value)}
+                    style={{ background: "white", borderColor: "#bbf7d0" }}
+                  />
+                </div>
+                {aiResult?.error && <p style={{ color: "#dc2626", fontSize: "0.85rem", margin: 0 }}>{aiResult.error}</p>}
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+                  <button 
+                    style={{ background: "transparent", border: "none", color: "#6b7280", cursor: "pointer", fontSize: "0.85rem" }}
+                    onClick={() => setShowAIPrompt(false)}
+                  >
+                    Annuler
+                  </button>
+                  <button 
+                    className="save-btn" 
+                    style={{ background: "#10b981", border: "none" }}
+                    onClick={handleGenerateAI}
+                    disabled={generating}
+                  >
+                    {generating ? "Génération en cours..." : "Rédiger l'e-mail"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <textarea 
               className="form-textarea" 
               style={{ flex: 1, minHeight: "300px", fontFamily: "sans-serif" }}

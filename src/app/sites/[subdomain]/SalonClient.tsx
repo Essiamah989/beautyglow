@@ -139,12 +139,10 @@ export default function SalonClient({
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         );
         const { data, error } = await supabase
-          .from("bookings")
+          .from("booking_availability")
           .select("booking_time, status")
           .eq("business_id", business.id)
-          .eq("booking_date", bookingDate)
-          .neq("status", "cancelled")
-          .neq("status", "no_show");
+          .eq("booking_date", bookingDate);
 
         if (error) throw error;
         // Format times to HH:MM if they come as HH:MM:SS
@@ -167,13 +165,11 @@ export default function SalonClient({
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       );
       const { data: existing, error: checkError } = await supabase
-        .from("bookings")
+        .from("booking_availability")
         .select("id, status, booking_time")
         .eq("business_id", business.id)
         .eq("booking_date", bookingDate)
         .eq("booking_time", bookingTime.length === 5 ? `${bookingTime}:00` : bookingTime)
-        .neq("status", "cancelled")
-        .neq("status", "no_show")
         .maybeSingle();
 
       if (checkError) throw checkError;
@@ -181,12 +177,10 @@ export default function SalonClient({
         alert("Désolé, ce créneau vient d'être réservé par un autre client. Veuillez en choisir un autre.");
         // Refresh booked slots
         const { data: updatedBookings } = await supabase
-          .from("bookings")
+          .from("booking_availability")
           .select("booking_time, status")
           .eq("business_id", business.id)
-          .eq("booking_date", bookingDate)
-          .neq("status", "cancelled")
-          .neq("status", "no_show");
+          .eq("booking_date", bookingDate);
         
         if (updatedBookings) setBookedSlots(updatedBookings.map(b => b.booking_time.substring(0, 5)));
         setBookingTime("");
@@ -226,11 +220,10 @@ export default function SalonClient({
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         );
         const { data: updated } = await supabase
-          .from("bookings")
+          .from("booking_availability")
           .select("booking_time")
           .eq("business_id", business.id)
-          .eq("booking_date", bookingDate)
-          .in("status", ["pending", "confirmed", "completed"]);
+          .eq("booking_date", bookingDate);
         if (updated) setBookedSlots(updated.map(b => b.booking_time.substring(0, 5)));
         setBookingTime("");
       } else {
